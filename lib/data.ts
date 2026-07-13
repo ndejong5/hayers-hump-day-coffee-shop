@@ -210,6 +210,7 @@ export async function getMyOrderHistory(deviceId: string): Promise<{
   customerName: string;
   customerRoom: string | null;
   customerEmail: string | null;
+  customerPhotoUrl: string | null;
   punchCount: number;
   rewardPunchesRequired: number;
   orders: MyOrderLine[];
@@ -218,7 +219,7 @@ export async function getMyOrderHistory(deviceId: string): Promise<{
   const supabase = createAdminSupabaseClient();
   const { data: customer, error: customerError } = await supabase
     .from("customers")
-    .select("id, name, room, email, punch_count")
+    .select("id, name, room, email, photo_url, punch_count")
     .eq("device_id", deviceId)
     .maybeSingle();
   if (customerError) throw new Error(customerError.message);
@@ -259,6 +260,7 @@ export async function getMyOrderHistory(deviceId: string): Promise<{
     customerName: customer.name,
     customerRoom: customer.room,
     customerEmail: customer.email,
+    customerPhotoUrl: customer.photo_url,
     punchCount: customer.punch_count,
     rewardPunchesRequired: settings.reward_punches_required,
     orders: lines,

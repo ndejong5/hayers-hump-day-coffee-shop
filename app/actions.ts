@@ -3,6 +3,7 @@
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { getMyOrderHistory as getMyOrderHistoryData } from "@/lib/data";
 import { notifyAdmins } from "@/lib/push";
+import { uploadImageToBucket } from "@/lib/imageUpload";
 import type { Customer, Order, PaymentMethod, WindowStatusRow } from "@/lib/types";
 
 export async function getCustomerByDeviceId(deviceId: string): Promise<Customer | null> {
@@ -123,5 +124,21 @@ export async function removeCustomerPushSubscription(endpoint: string): Promise<
     .from("customer_push_subscriptions")
     .delete()
     .eq("endpoint", endpoint);
+  if (error) throw new Error(error.message);
+}
+
+export async function uploadMyPhoto(
+  formData: FormData
+): Promise<{ url: string } | { error: string }> {
+  return uploadImageToBucket("customer-photos", formData);
+}
+
+export async function setMyPhoto(deviceId: string, photoUrl: string | null): Promise<void> {
+  if (!deviceId) return;
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase
+    .from("customers")
+    .update({ photo_url: photoUrl })
+    .eq("device_id", deviceId);
   if (error) throw new Error(error.message);
 }

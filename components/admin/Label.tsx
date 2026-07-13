@@ -1,5 +1,5 @@
 import type { BoardOrder } from "@/lib/types";
-import { CustomerAvatar } from "./CustomerAvatar";
+import { CustomerAvatar } from "@/components/ui/CustomerAvatar";
 import { DrinkIllustration } from "@/components/customer/DrinkIllustration";
 
 export function Label({ order }: { order: BoardOrder }) {

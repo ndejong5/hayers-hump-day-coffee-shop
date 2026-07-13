@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { getOrCreateDeviceId } from "@/lib/device";
-import { getMyOrderHistory, updateCustomerEmail } from "@/app/actions";
+import { getMyOrderHistory, updateCustomerEmail, uploadMyPhoto, setMyPhoto } from "@/app/actions";
 import { formatCents } from "@/lib/currency";
 import type { MyOrderLine } from "@/lib/types";
 import { PunchCard } from "./PunchCard";
 import { CustomerPushToggle } from "./CustomerPushToggle";
 import { DrinkIllustration } from "./DrinkIllustration";
+import { CustomerAvatar } from "@/components/ui/CustomerAvatar";
 import { Button } from "@/components/ui/Button";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -20,6 +21,7 @@ export function MyHistory() {
   const [deviceId, setDeviceId] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState<string | null>(null);
+  const [customerPhotoUrl, setCustomerPhotoUrl] = useState<string | null>(null);
   const [orders, setOrders] = useState<MyOrderLine[]>([]);
   const [tabBalanceCents, setTabBalanceCents] = useState(0);
   const [punchCount, setPunchCount] = useState(0);
@@ -29,6 +31,9 @@ export function MyHistory() {
   const [emailInput, setEmailInput] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [savingEmail, setSavingEmail] = useState(false);
+
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   useEffect(() => {
     const id = getOrCreateDeviceId();
@@ -40,6 +45,7 @@ export function MyHistory() {
       }
       setCustomerName(result.customerName);
       setCustomerEmail(result.customerEmail);
+      setCustomerPhotoUrl(result.customerPhotoUrl);
       setOrders(result.orders);
       setTabBalanceCents(result.tabBalanceCents);
       setPunchCount(result.punchCount);
@@ -60,6 +66,33 @@ export function MyHistory() {
     setCustomerEmail(updated.email);
     setSavingEmail(false);
     setEditingEmail(false);
+  }
+
+  async function handlePickPhoto(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setPhotoError(null);
+    setUploadingPhoto(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    const result = await uploadMyPhoto(formData);
+    if ("error" in result) {
+      setUploadingPhoto(false);
+      setPhotoError(result.error);
+      return;
+    }
+    await setMyPhoto(deviceId, result.url);
+    setCustomerPhotoUrl(result.url);
+    setUploadingPhoto(false);
+  }
+
+  async function handleRemovePhoto() {
+    setUploadingPhoto(true);
+    await setMyPhoto(deviceId, null);
+    setCustomerPhotoUrl(null);
+    setUploadingPhoto(false);
   }
 
   if (state === "loading") {
@@ -93,6 +126,42 @@ export function MyHistory() {
       </div>
 
       <div className="flex w-full flex-col items-center gap-6 px-4 py-6">
+        <div className="flex w-full max-w-sm items-center gap-4 rounded-3xl bg-white p-4 shadow-sm">
+          <CustomerAvatar
+            name={customerName}
+            photoUrl={customerPhotoUrl}
+            className="h-20 w-20 shrink-0"
+            textClassName="text-3xl"
+          />
+          <div className="flex flex-1 flex-col gap-1">
+            <p className="text-sm text-amber-600">
+              My photo <span className="font-normal text-amber-400">(optional)</span>
+            </p>
+            {photoError && <p className="text-sm text-red-700">{photoError}</p>}
+            <div className="flex gap-2">
+              <label className="cursor-pointer whitespace-nowrap rounded-full border-2 border-orange-300 px-3 py-2 text-center text-sm font-semibold text-orange-700">
+                {uploadingPhoto ? "Uploading..." : customerPhotoUrl ? "Change" : "Add Photo"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadingPhoto}
+                  onChange={handlePickPhoto}
+                />
+              </label>
+              {customerPhotoUrl && (
+                <button
+                  onClick={handleRemovePhoto}
+                  disabled={uploadingPhoto}
+                  className="text-sm text-red-700"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="w-full max-w-sm rounded-3xl bg-white px-4 py-3 text-center shadow-sm">
           <p className="text-sm text-amber-600">Current tab balance</p>
           <p className="text-2xl font-bold text-amber-900">{formatCents(tabBalanceCents)}</p>

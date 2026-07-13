@@ -4,7 +4,7 @@ import { useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { CustomerPhotoRow } from "@/lib/data";
 import { uploadCustomerPhoto, setCustomerPhoto } from "@/app/admin/actions";
-import { CustomerAvatar } from "./CustomerAvatar";
+import { CustomerAvatar } from "@/components/ui/CustomerAvatar";
 
 export function CustomersManager({ customers }: { customers: CustomerPhotoRow[] }) {
   const router = useRouter();
