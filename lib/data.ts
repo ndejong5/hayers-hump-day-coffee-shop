@@ -156,6 +156,7 @@ export interface CustomerTabDetail {
   customer_id: string;
   customer_name: string;
   customer_room: string | null;
+  customer_email: string | null;
   balance_cents: number;
   orders: TabOrderLine[];
 }
@@ -164,7 +165,7 @@ export async function getCustomerTabDetail(customerId: string): Promise<Customer
   const supabase = createAdminSupabaseClient();
   const { data: customer, error: customerError } = await supabase
     .from("customers")
-    .select("id, name, room")
+    .select("id, name, room, email")
     .eq("id", customerId)
     .maybeSingle();
   if (customerError) throw new Error(customerError.message);
@@ -196,6 +197,7 @@ export async function getCustomerTabDetail(customerId: string): Promise<Customer
     customer_id: customer.id,
     customer_name: customer.name,
     customer_room: customer.room,
+    customer_email: customer.email,
     balance_cents: lines.reduce((sum, l) => sum + l.total_cents, 0),
     orders: lines,
   };
@@ -204,6 +206,7 @@ export async function getCustomerTabDetail(customerId: string): Promise<Customer
 export async function getMyOrderHistory(deviceId: string): Promise<{
   customerName: string;
   customerRoom: string | null;
+  customerEmail: string | null;
   punchCount: number;
   rewardPunchesRequired: number;
   orders: MyOrderLine[];
@@ -212,7 +215,7 @@ export async function getMyOrderHistory(deviceId: string): Promise<{
   const supabase = createAdminSupabaseClient();
   const { data: customer, error: customerError } = await supabase
     .from("customers")
-    .select("id, name, room, punch_count")
+    .select("id, name, room, email, punch_count")
     .eq("device_id", deviceId)
     .maybeSingle();
   if (customerError) throw new Error(customerError.message);
@@ -252,6 +255,7 @@ export async function getMyOrderHistory(deviceId: string): Promise<{
   return {
     customerName: customer.name,
     customerRoom: customer.room,
+    customerEmail: customer.email,
     punchCount: customer.punch_count,
     rewardPunchesRequired: settings.reward_punches_required,
     orders: lines,

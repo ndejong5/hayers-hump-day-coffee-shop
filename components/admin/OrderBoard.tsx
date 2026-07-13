@@ -6,6 +6,7 @@ import { fetchOrderForBoard, markMade, markDelivered } from "@/app/admin/actions
 import type { BoardOrder } from "@/lib/types";
 import { OrderCard } from "./OrderCard";
 import { CashCollectedModal } from "./CashCollectedModal";
+import { PushNotificationToggle } from "./PushNotificationToggle";
 
 export function OrderBoard({
   initialOrders,
@@ -124,7 +125,10 @@ export function OrderBoard({
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-4 px-4 py-6">
-      <h1 className="text-2xl font-bold text-amber-900">☕ Order Board</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold text-amber-900">☕ Order Board</h1>
+        <PushNotificationToggle />
+      </div>
 
       <div className="rounded-2xl bg-white px-4 py-3 text-center text-amber-800 shadow-sm">
         {orders.length} orders · {madeCount} made · {deliveredCount} delivered

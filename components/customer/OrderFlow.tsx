@@ -51,8 +51,8 @@ export function OrderFlow({
     });
   }, []);
 
-  async function handleNameSubmit(name: string, room: string) {
-    const c = await registerCustomer(deviceId, name, room);
+  async function handleNameSubmit(name: string, room: string, email: string) {
+    const c = await registerCustomer(deviceId, name, room, email);
     setCustomer(c);
     setStep("menu");
   }
@@ -170,6 +170,7 @@ export function OrderFlow({
       {step === "confirm" && lastOrder && (
         <OrderConfirmation
           order={lastOrder}
+          settings={settings}
           canOrderAgain={windowStatus.status === "open"}
           onOrderAgain={handleOrderAgain}
         />

@@ -2,6 +2,7 @@
 
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { getMyOrderHistory as getMyOrderHistoryData } from "@/lib/data";
+import { notifyAdmins } from "@/lib/push";
 import type { Customer, Order, PaymentMethod, WindowStatusRow } from "@/lib/types";
 
 export async function getCustomerByDeviceId(deviceId: string): Promise<Customer | null> {
@@ -19,13 +20,25 @@ export async function getCustomerByDeviceId(deviceId: string): Promise<Customer 
 export async function registerCustomer(
   deviceId: string,
   name: string,
-  room: string
+  room: string,
+  email: string
 ): Promise<Customer> {
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase.rpc("get_or_create_customer", {
     p_device_id: deviceId,
     p_name: name,
     p_room: room,
+    p_email: email,
+  });
+  if (error) throw new Error(error.message);
+  return data as Customer;
+}
+
+export async function updateCustomerEmail(deviceId: string, email: string): Promise<Customer> {
+  const supabase = createAdminSupabaseClient();
+  const { data, error } = await supabase.rpc("update_customer_email", {
+    p_device_id: deviceId,
+    p_email: email,
   });
   if (error) throw new Error(error.message);
   return data as Customer;
@@ -47,7 +60,24 @@ export async function submitOrder(input: {
     p_is_redemption: input.isRedemption,
   });
   if (error) return { error: error.message };
-  return { order: data as Order };
+  const order = data as Order;
+
+  try {
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("name, room")
+      .eq("id", order.customer_id)
+      .maybeSingle();
+    await notifyAdmins({
+      title: "New order!",
+      body: `${customer?.name ?? "Someone"}${customer?.room ? ` (Rm ${customer.room})` : ""} — ${order.drink_name_at_order}`,
+      url: "/admin/board",
+    });
+  } catch {
+    // Push delivery is best-effort; never fail order placement over it.
+  }
+
+  return { order };
 }
 
 export async function refreshWindowStatus(): Promise<WindowStatusRow> {
@@ -60,4 +90,38 @@ export async function refreshWindowStatus(): Promise<WindowStatusRow> {
 export async function getMyOrderHistory(deviceId: string) {
   if (!deviceId) return null;
   return getMyOrderHistoryData(deviceId);
+}
+
+export async function saveCustomerPushSubscription(
+  deviceId: string,
+  subscription: { endpoint: string; keys: { p256dh: string; auth: string } }
+): Promise<void> {
+  const supabase = createAdminSupabaseClient();
+  const { data: customer, error: customerError } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("device_id", deviceId)
+    .maybeSingle();
+  if (customerError) throw new Error(customerError.message);
+  if (!customer) throw new Error("customer_not_found");
+
+  const { error } = await supabase.from("customer_push_subscriptions").upsert(
+    {
+      customer_id: customer.id,
+      endpoint: subscription.endpoint,
+      p256dh: subscription.keys.p256dh,
+      auth: subscription.keys.auth,
+    },
+    { onConflict: "endpoint" }
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function removeCustomerPushSubscription(endpoint: string): Promise<void> {
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase
+    .from("customer_push_subscriptions")
+    .delete()
+    .eq("endpoint", endpoint);
+  if (error) throw new Error(error.message);
 }

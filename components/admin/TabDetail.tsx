@@ -6,7 +6,8 @@ import Link from "next/link";
 import type { CustomerTabDetail } from "@/lib/data";
 import type { PublicSettings } from "@/lib/types";
 import { formatCents } from "@/lib/currency";
-import { settleTab } from "@/app/admin/actions";
+import { buildVenmoLink, buildPaypalLink } from "@/lib/paymentLinks";
+import { settleTab, sendBillEmail } from "@/app/admin/actions";
 import { Button } from "@/components/ui/Button";
 
 export function TabDetail({
@@ -20,6 +21,8 @@ export function TabDetail({
   const [confirming, setConfirming] = useState(false);
   const [settling, setSettling] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [emailing, setEmailing] = useState(false);
+  const [emailResult, setEmailResult] = useState<{ ok: boolean; message: string } | null>(null);
 
   async function handleSettle() {
     setSettling(true);
@@ -29,6 +32,14 @@ export function TabDetail({
     router.push("/admin/tabs");
     router.refresh();
   }
+
+  const statementNote = `${settings.shop_name} - ${detail.customer_name}`;
+  const venmoLink =
+    detail.balance_cents > 0
+      ? buildVenmoLink(settings.venmo_link ?? "", detail.balance_cents, statementNote)
+      : "";
+  const paypalLink =
+    detail.balance_cents > 0 ? buildPaypalLink(settings.paypal_link ?? "", detail.balance_cents) : "";
 
   function buildStatementText(): string {
     const lines = [
@@ -43,8 +54,8 @@ export function TabDetail({
       "",
       `Total due: ${formatCents(detail.balance_cents)}`,
     ];
-    if (settings.venmo_link) lines.push(`Venmo: ${settings.venmo_link}`);
-    if (settings.paypal_link) lines.push(`PayPal: ${settings.paypal_link}`);
+    if (venmoLink) lines.push(`Pay with Venmo: ${venmoLink}`);
+    if (paypalLink) lines.push(`Pay with PayPal: ${paypalLink}`);
     return lines.join("\n");
   }
 
@@ -56,6 +67,18 @@ export function TabDetail({
 
   function handlePrint() {
     window.print();
+  }
+
+  async function handleEmailBill() {
+    setEmailing(true);
+    setEmailResult(null);
+    const result = await sendBillEmail(detail.customer_id);
+    setEmailing(false);
+    setEmailResult(
+      result.ok
+        ? { ok: true, message: `Sent to ${detail.customer_email}` }
+        : { ok: false, message: result.error }
+    );
   }
 
   return (
@@ -108,10 +131,28 @@ export function TabDetail({
         </div>
       </div>
 
-      {(settings.venmo_link || settings.paypal_link) && (
-        <div className="text-sm text-amber-700">
-          {settings.venmo_link && <p>Venmo: {settings.venmo_link}</p>}
-          {settings.paypal_link && <p>PayPal: {settings.paypal_link}</p>}
+      {(venmoLink || paypalLink) && (
+        <div className="flex flex-col gap-2 print:hidden">
+          {venmoLink && (
+            <a
+              href={venmoLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full rounded-2xl border-2 border-amber-300 bg-white px-6 py-3 text-center font-semibold text-amber-900"
+            >
+              Pay with Venmo
+            </a>
+          )}
+          {paypalLink && (
+            <a
+              href={paypalLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full rounded-2xl border-2 border-amber-300 bg-white px-6 py-3 text-center font-semibold text-amber-900"
+            >
+              Pay with PayPal
+            </a>
+          )}
         </div>
       )}
 
@@ -130,6 +171,25 @@ export function TabDetail({
             {copied ? "Copied!" : "Copy summary"}
           </button>
         </div>
+
+        {detail.orders.length > 0 && (
+          <button
+            onClick={handleEmailBill}
+            disabled={emailing || !detail.customer_email}
+            className="rounded-xl border-2 border-amber-300 px-4 py-3 font-semibold text-amber-900 disabled:opacity-40"
+          >
+            {emailing
+              ? "Sending..."
+              : detail.customer_email
+                ? "Email Bill"
+                : "Email Bill (no email on file)"}
+          </button>
+        )}
+        {emailResult && (
+          <p className={`text-center text-sm ${emailResult.ok ? "text-green-700" : "text-red-700"}`}>
+            {emailResult.message}
+          </p>
+        )}
 
         {detail.orders.length > 0 && !confirming && (
           <button

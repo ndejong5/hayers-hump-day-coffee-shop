@@ -7,6 +7,7 @@ export interface Customer {
   device_id: string;
   name: string;
   room: string | null;
+  email: string | null;
   punch_count: number;
   created_at: string;
 }

@@ -1,9 +1,13 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { Resend } from "resend";
 import { cookies } from "next/headers";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { getOrderForBoard } from "@/lib/data";
+import { getOrderForBoard, getCustomerTabDetail, getPublicSettings } from "@/lib/data";
+import { buildVenmoLink, buildPaypalLink } from "@/lib/paymentLinks";
+import { formatCents } from "@/lib/currency";
+import { notifyCustomer } from "@/lib/push";
 import type { BoardOrder, ManualWindowState } from "@/lib/types";
 
 const ADMIN_COOKIE = "bower_admin";
@@ -74,11 +78,24 @@ export async function markDelivered(
 ): Promise<void> {
   await requireAdmin();
   const supabase = createAdminSupabaseClient();
-  const { error } = await supabase.rpc("mark_order_delivered", {
+  const { data, error } = await supabase.rpc("mark_order_delivered", {
     p_order_id: orderId,
     p_cash_collected: cashCollected,
   });
   if (error) throw new Error(error.message);
+
+  const order = data as { customer_id: string; drink_name_at_order: string } | null;
+  if (order) {
+    try {
+      await notifyCustomer(order.customer_id, {
+        title: "Your coffee has arrived! ☕",
+        body: `Your ${order.drink_name_at_order} was just delivered.`,
+        url: "/me",
+      });
+    } catch {
+      // Push delivery is best-effort; never fail the delivery update over it.
+    }
+  }
 }
 
 export async function createDrink(input: {
@@ -299,5 +316,116 @@ export async function setRewardSettings(input: {
       modifiers_charge_on_reward: input.modifiersChargeOnReward,
     })
     .eq("id", 1);
+  if (error) throw new Error(error.message);
+}
+
+export async function setPaymentLinks(input: {
+  venmoLink: string;
+  paypalLink: string;
+}): Promise<void> {
+  await requireAdmin();
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase
+    .from("settings")
+    .update({
+      venmo_link: input.venmoLink || null,
+      paypal_link: input.paypalLink || null,
+    })
+    .eq("id", 1);
+  if (error) throw new Error(error.message);
+}
+
+export async function sendBillEmail(
+  customerId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin();
+
+  const [detail, settings] = await Promise.all([
+    getCustomerTabDetail(customerId),
+    getPublicSettings(),
+  ]);
+  if (!detail) return { ok: false, error: "Customer not found." };
+  if (!detail.customer_email) return { ok: false, error: "This customer has no email on file." };
+  if (detail.orders.length === 0) return { ok: false, error: "No unsettled orders to bill." };
+
+  const note = `${settings.shop_name} - ${detail.customer_name}`;
+  const venmoLink = buildVenmoLink(settings.venmo_link ?? "", detail.balance_cents, note);
+  const paypalLink = buildPaypalLink(settings.paypal_link ?? "", detail.balance_cents);
+
+  const rows = detail.orders
+    .map((o) => {
+      const modText =
+        o.modifiers.length > 0 ? ` (${o.modifiers.map((m) => m.name).join(", ")})` : "";
+      const date = new Date(o.created_at).toLocaleDateString();
+      return `<tr><td style="padding:4px 8px;border-bottom:1px solid #fde68a;">${date}</td><td style="padding:4px 8px;border-bottom:1px solid #fde68a;">${o.drink_name_at_order}${modText}</td><td style="padding:4px 8px;border-bottom:1px solid #fde68a;text-align:right;">${formatCents(o.total_cents)}</td></tr>`;
+    })
+    .join("");
+
+  const payLinksHtml = [
+    venmoLink ? `<a href="${venmoLink}" style="color:#d97706;">Pay with Venmo</a>` : "",
+    paypalLink ? `<a href="${paypalLink}" style="color:#d97706;">Pay with PayPal</a>` : "",
+  ]
+    .filter(Boolean)
+    .join(" &nbsp;|&nbsp; ");
+
+  const html = `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color:#451a03;">
+      <h2 style="color:#78350f;">${settings.shop_name}</h2>
+      <p>Hi ${detail.customer_name},</p>
+      <p>Here's your current statement:</p>
+      <table style="width:100%; border-collapse: collapse;">${rows}</table>
+      <p style="font-size:18px; font-weight:bold;">Total due: ${formatCents(detail.balance_cents)}</p>
+      ${payLinksHtml ? `<p>${payLinksHtml}</p>` : ""}
+      <p style="color:#92400e; font-size:12px;">Thanks for your business!</p>
+    </div>
+  `;
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const { error } = await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL || "Bower Coffee Shop <onboarding@resend.dev>",
+    to: detail.customer_email,
+    subject: `${settings.shop_name} — Your bill: ${formatCents(detail.balance_cents)}`,
+    html,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  try {
+    await notifyCustomer(detail.customer_id, {
+      title: "Your bill is ready 🧾",
+      body: `You have ${formatCents(detail.balance_cents)} due — check your email for the statement.`,
+      url: "/me",
+    });
+  } catch {
+    // Push delivery is best-effort; the email already went out.
+  }
+
+  return { ok: true };
+}
+
+export async function saveAdminPushSubscription(subscription: {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}): Promise<void> {
+  await requireAdmin();
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase.from("admin_push_subscriptions").upsert(
+    {
+      endpoint: subscription.endpoint,
+      p256dh: subscription.keys.p256dh,
+      auth: subscription.keys.auth,
+    },
+    { onConflict: "endpoint" }
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function removeAdminPushSubscription(endpoint: string): Promise<void> {
+  await requireAdmin();
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase
+    .from("admin_push_subscriptions")
+    .delete()
+    .eq("endpoint", endpoint);
   if (error) throw new Error(error.message);
 }

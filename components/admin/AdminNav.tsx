@@ -10,6 +10,7 @@ const links = [
   { href: "/admin/window", label: "Window" },
   { href: "/admin/tabs", label: "Tabs" },
   { href: "/admin/rewards", label: "Rewards" },
+  { href: "/admin/settings", label: "Settings" },
 ];
 
 export function AdminNav() {
@@ -22,13 +23,13 @@ export function AdminNav() {
   }
 
   return (
-    <nav className="flex items-center justify-between border-b border-amber-200 bg-white px-4 py-3">
-      <div className="flex gap-4">
+    <nav className="flex items-center justify-between gap-3 border-b border-amber-200 bg-white px-4 py-3">
+      <div className="flex gap-4 overflow-x-auto">
         {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}
-            className={`text-sm font-semibold ${
+            className={`shrink-0 whitespace-nowrap text-sm font-semibold ${
               pathname.startsWith(link.href) ? "text-amber-900" : "text-amber-500"
             }`}
           >
@@ -36,7 +37,10 @@ export function AdminNav() {
           </Link>
         ))}
       </div>
-      <button onClick={handleLogout} className="text-sm text-amber-700 underline">
+      <button
+        onClick={handleLogout}
+        className="shrink-0 whitespace-nowrap text-sm text-amber-700 underline"
+      >
         Log out
       </button>
     </nav>
