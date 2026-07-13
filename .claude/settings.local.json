@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx --yes create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=false --import-alias \"@/*\" --use-npm --no-turbopack)",
+      "Read(//opt/homebrew/bin/**)",
+      "Read(//Users/nickdejong/**)",
+      "Bash(/usr/bin/pgrep oahd *)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(brew install *)",
+      "Bash(/opt/homebrew/bin/node -v)",
+      "Bash(/opt/homebrew/bin/npm -v)",
+      "Read(//usr/local/bin/**)",
+      "Bash(brew list *)",
+      "Bash(pkgutil --pkgs)",
+      "Read(//opt/homebrew/lib/node_modules/npm/bin/**)",
+      "Bash(pbcopy)",
+      "WebFetch(domain:status.supabase.com)",
+      "Bash(ls -la '/Users/nickdejong/Hayner'\\\\''s Hump Day Coffee Shop/app/admin')",
+      "Bash(echo \"---\")",
+      "Bash(find '/Users/nickdejong/Hayner'\\\\''s Hump Day Coffee Shop/app/admin' -type f)",
+      "Bash(mkdir -p \"/Users/nickdejong/Hayner's Hump Day Coffee Shop/app/admin/\\(protected\\)/tabs/[customerId]\")",
+      "Bash(gh auth *)",
+      "Bash(git init *)",
+      "Bash(git branch *)",
+      "Bash(git add *)"
+    ]
+  }
+}
