@@ -86,10 +86,10 @@ export function MenuManager({
     <main className="mx-auto flex max-w-2xl flex-col gap-8 px-4 py-6">
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-amber-900">Drinks</h2>
+          <h2 className="font-display text-xl font-bold text-amber-900">Drinks</h2>
           <button
             onClick={() => setEditingDrink("new")}
-            className="rounded-full bg-amber-600 px-4 py-2 text-sm font-semibold text-white"
+            className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white"
           >
             + Add Drink
           </button>
@@ -112,10 +112,10 @@ export function MenuManager({
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-amber-900">Modifiers</h2>
+          <h2 className="font-display text-xl font-bold text-amber-900">Modifiers</h2>
           <button
             onClick={() => setEditingModifier("new")}
-            className="rounded-full bg-amber-600 px-4 py-2 text-sm font-semibold text-white"
+            className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white"
           >
             + Add Modifier
           </button>

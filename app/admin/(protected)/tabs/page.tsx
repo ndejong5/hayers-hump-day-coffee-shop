@@ -9,7 +9,7 @@ export default async function TabsPage() {
 
   return (
     <main className="mx-auto flex max-w-lg flex-col gap-4 px-4 py-6">
-      <h2 className="text-xl font-bold text-amber-900">Tabs</h2>
+      <h2 className="font-display text-xl font-bold text-amber-900">Tabs</h2>
 
       {summaries.length === 0 && <p className="text-amber-700">No open tabs right now.</p>}
 

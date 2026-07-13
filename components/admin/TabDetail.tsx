@@ -90,7 +90,7 @@ export function TabDetail({
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-amber-900">{settings.shop_name}</h2>
+        <h2 className="font-display text-xl font-bold text-amber-900">{settings.shop_name}</h2>
         <p className="text-amber-700">
           Statement for {detail.customer_name}
           {detail.customer_room && ` — Rm ${detail.customer_room}`}

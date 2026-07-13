@@ -46,7 +46,7 @@ export function RewardsManager({
 
   return (
     <main className="mx-auto flex max-w-lg flex-col gap-6 px-4 py-6">
-      <h2 className="text-xl font-bold text-amber-900">Rewards</h2>
+      <h2 className="font-display text-xl font-bold text-amber-900">Rewards</h2>
 
       <div className="rounded-2xl bg-white p-4 shadow-sm">
         <label className="mb-2 block text-sm font-medium text-amber-900">
@@ -73,7 +73,7 @@ export function RewardsManager({
         <button
           onClick={handleSaveSettings}
           disabled={savingSettings}
-          className="mt-4 w-full rounded-xl bg-amber-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-amber-700 disabled:opacity-40"
+          className="mt-4 w-full rounded-xl bg-orange-500 px-4 py-2 font-semibold text-white transition-colors hover:bg-orange-600 disabled:opacity-40"
         >
           {savingSettings ? "Saving..." : "Save settings"}
         </button>

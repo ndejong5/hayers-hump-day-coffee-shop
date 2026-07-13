@@ -66,7 +66,9 @@ export function DrinkFormModal({
         onSubmit={handleSubmit}
         className="my-8 flex w-full max-w-sm flex-col gap-4 rounded-2xl bg-white p-6 shadow-lg"
       >
-        <h3 className="text-lg font-bold text-amber-900">{drink ? "Edit Drink" : "Add Drink"}</h3>
+        <h3 className="font-display text-lg font-bold text-amber-900">
+          {drink ? "Edit Drink" : "Add Drink"}
+        </h3>
 
         <div>
           <label className="mb-1 block text-sm font-medium text-amber-900">Name</label>

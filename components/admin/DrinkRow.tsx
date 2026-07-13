@@ -1,6 +1,7 @@
 import type { Modifier } from "@/lib/types";
 import type { MenuDrink } from "@/lib/data";
 import { formatCents } from "@/lib/currency";
+import { DrinkIllustration } from "@/components/customer/DrinkIllustration";
 
 export function DrinkRow({
   drink,
@@ -26,28 +27,31 @@ export function DrinkRow({
     .map((m) => m.name);
 
   return (
-    <div className={`rounded-2xl bg-white p-4 shadow-sm ${drink.is_active ? "" : "opacity-50"}`}>
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-lg font-semibold text-amber-900">{drink.name}</p>
-          {drink.description && <p className="text-sm text-amber-700">{drink.description}</p>}
-          {modifierNames.length > 0 && (
-            <p className="mt-1 text-xs text-amber-600">Modifiers: {modifierNames.join(", ")}</p>
-          )}
+    <div className={`rounded-3xl bg-white p-4 shadow-sm ${drink.is_active ? "" : "opacity-50"}`}>
+      <div className="flex items-start gap-3">
+        <DrinkIllustration name={drink.name} className="aspect-square w-16 shrink-0" />
+        <div className="flex flex-1 items-start justify-between gap-2">
+          <div>
+            <p className="font-display text-lg font-bold text-amber-900">{drink.name}</p>
+            {drink.description && <p className="text-sm text-amber-700">{drink.description}</p>}
+            {modifierNames.length > 0 && (
+              <p className="mt-1 text-xs text-amber-600">Modifiers: {modifierNames.join(", ")}</p>
+            )}
+          </div>
+          <span className="font-semibold text-orange-600">{formatCents(drink.price_cents)}</span>
         </div>
-        <span className="font-semibold text-amber-900">{formatCents(drink.price_cents)}</span>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           onClick={onEdit}
-          className="rounded-lg border-2 border-amber-300 px-3 py-2 text-sm font-semibold text-amber-900"
+          className="rounded-full border-2 border-amber-300 px-3 py-2 text-sm font-semibold text-amber-900"
         >
           Edit
         </button>
         <button
           onClick={onToggleActive}
-          className={`rounded-lg border-2 px-3 py-2 text-sm font-semibold ${
+          className={`rounded-full border-2 px-3 py-2 text-sm font-semibold ${
             drink.is_active ? "border-red-300 text-red-700" : "border-green-300 text-green-700"
           }`}
         >
@@ -56,14 +60,14 @@ export function DrinkRow({
         <button
           onClick={onMoveUp}
           disabled={isFirst}
-          className="rounded-lg border-2 border-amber-300 px-3 py-2 text-sm font-semibold text-amber-900 disabled:opacity-30"
+          className="rounded-full border-2 border-amber-300 px-3 py-2 text-sm font-semibold text-amber-900 disabled:opacity-30"
         >
           ↑
         </button>
         <button
           onClick={onMoveDown}
           disabled={isLast}
-          className="rounded-lg border-2 border-amber-300 px-3 py-2 text-sm font-semibold text-amber-900 disabled:opacity-30"
+          className="rounded-full border-2 border-amber-300 px-3 py-2 text-sm font-semibold text-amber-900 disabled:opacity-30"
         >
           ↓
         </button>

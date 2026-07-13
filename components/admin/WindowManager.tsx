@@ -56,7 +56,7 @@ export function WindowManager({ windowStatus }: { windowStatus: WindowStatusRow 
 
   return (
     <main className="mx-auto flex max-w-lg flex-col gap-6 px-4 py-6">
-      <h2 className="text-xl font-bold text-amber-900">Order Window</h2>
+      <h2 className="font-display text-xl font-bold text-amber-900">Order Window</h2>
 
       <div className={`rounded-2xl px-4 py-4 text-center ${statusInfo.className}`}>
         <p className="text-lg font-semibold">{statusInfo.label}</p>
@@ -79,7 +79,7 @@ export function WindowManager({ windowStatus }: { windowStatus: WindowStatusRow 
           <button
             onClick={handleSaveCap}
             disabled={savingCap}
-            className="shrink-0 rounded-xl bg-amber-600 px-6 py-2 font-semibold text-white transition-colors hover:bg-amber-700 disabled:opacity-40"
+            className="shrink-0 rounded-xl bg-orange-500 px-6 py-2 font-semibold text-white transition-colors hover:bg-orange-600 disabled:opacity-40"
           >
             {savingCap ? "Saving..." : "Update"}
           </button>

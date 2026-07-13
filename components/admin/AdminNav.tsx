@@ -5,12 +5,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { logoutAdmin } from "@/app/admin/actions";
 
 const links = [
-  { href: "/admin/board", label: "Board" },
-  { href: "/admin/menu", label: "Menu" },
-  { href: "/admin/window", label: "Window" },
-  { href: "/admin/tabs", label: "Tabs" },
-  { href: "/admin/rewards", label: "Rewards" },
-  { href: "/admin/settings", label: "Settings" },
+  { href: "/admin/board", label: "Board", icon: "☕" },
+  { href: "/admin/menu", label: "Menu", icon: "📋" },
+  { href: "/admin/window", label: "Window", icon: "🪟" },
+  { href: "/admin/tabs", label: "Tabs", icon: "🧾" },
+  { href: "/admin/rewards", label: "Rewards", icon: "🎁" },
+  { href: "/admin/settings", label: "Settings", icon: "⚙️" },
 ];
 
 export function AdminNav() {
@@ -23,23 +23,26 @@ export function AdminNav() {
   }
 
   return (
-    <nav className="flex items-center justify-between gap-3 border-b border-amber-200 bg-white px-4 py-3">
-      <div className="flex gap-4 overflow-x-auto">
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={`shrink-0 whitespace-nowrap text-sm font-semibold ${
-              pathname.startsWith(link.href) ? "text-amber-900" : "text-amber-500"
-            }`}
-          >
-            {link.label}
-          </Link>
-        ))}
+    <nav className="flex items-center justify-between gap-3 border-b border-amber-200 bg-white px-4 py-2">
+      <div className="flex gap-2 overflow-x-auto">
+        {links.map((link) => {
+          const active = pathname.startsWith(link.href);
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-sm font-bold transition ${
+                active ? "bg-orange-100 text-orange-700" : "text-amber-500"
+              }`}
+            >
+              {link.icon} {link.label}
+            </Link>
+          );
+        })}
       </div>
       <button
         onClick={handleLogout}
-        className="shrink-0 whitespace-nowrap text-sm text-amber-700 underline"
+        className="shrink-0 whitespace-nowrap text-sm font-medium text-amber-700 underline"
       >
         Log out
       </button>

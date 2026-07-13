@@ -11,7 +11,7 @@ export default async function ProtectedAdminLayout({
   if (!authed) redirect("/admin/login");
 
   return (
-    <div className="min-h-dvh bg-amber-50">
+    <div className="min-h-dvh bg-background">
       <AdminNav />
       {children}
     </div>

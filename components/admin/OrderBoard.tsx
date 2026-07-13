@@ -124,13 +124,13 @@ export function OrderBoard({
   const deliveredCount = orders.filter((o) => o.delivered_at).length;
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-4 px-4 py-6">
+    <main className="mx-auto flex max-w-2xl flex-col gap-4 bg-background px-4 py-6">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold text-amber-900">☕ Order Board</h1>
+        <h1 className="font-display text-3xl font-bold text-amber-900">☕ Order Board</h1>
         <PushNotificationToggle />
       </div>
 
-      <div className="rounded-2xl bg-white px-4 py-3 text-center text-amber-800 shadow-sm">
+      <div className="rounded-3xl bg-white px-4 py-3 text-center text-lg font-semibold text-amber-800 shadow-sm">
         {orders.length} orders · {madeCount} made · {deliveredCount} delivered
       </div>
 

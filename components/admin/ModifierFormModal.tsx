@@ -42,7 +42,7 @@ export function ModifierFormModal({
         onSubmit={handleSubmit}
         className="flex w-full max-w-sm flex-col gap-4 rounded-2xl bg-white p-6 shadow-lg"
       >
-        <h3 className="text-lg font-bold text-amber-900">
+        <h3 className="font-display text-lg font-bold text-amber-900">
           {modifier ? "Edit Modifier" : "Add Modifier"}
         </h3>
 

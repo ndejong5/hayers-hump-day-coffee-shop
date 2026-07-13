@@ -23,7 +23,7 @@ export function PaymentLinksManager({ settings }: { settings: PublicSettings }) 
 
   return (
     <main className="mx-auto flex max-w-lg flex-col gap-6 px-4 py-6">
-      <h2 className="text-xl font-bold text-amber-900">Payment Links</h2>
+      <h2 className="font-display text-xl font-bold text-amber-900">Payment Links</h2>
       <p className="text-sm text-amber-700">
         Optional. If set, customers see a &quot;Pay with Venmo/PayPal&quot; button on order
         confirmations and monthly statements, pre-filled with the amount owed.
@@ -51,7 +51,7 @@ export function PaymentLinksManager({ settings }: { settings: PublicSettings }) 
         <button
           onClick={handleSave}
           disabled={saving}
-          className="mt-4 w-full rounded-xl bg-amber-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-amber-700 disabled:opacity-40"
+          className="mt-4 w-full rounded-xl bg-orange-500 px-4 py-2 font-semibold text-white transition-colors hover:bg-orange-600 disabled:opacity-40"
         >
           {saving ? "Saving..." : saved ? "Saved!" : "Save"}
         </button>
