@@ -102,6 +102,7 @@ export async function createDrink(input: {
   name: string;
   description: string;
   price_cents: number;
+  imageUrl: string | null;
 }): Promise<string> {
   await requireAdmin();
   const supabase = createAdminSupabaseClient();
@@ -119,6 +120,7 @@ export async function createDrink(input: {
       name: input.name,
       description: input.description || null,
       price_cents: input.price_cents,
+      image_url: input.imageUrl,
       sort_order: nextSortOrder,
     })
     .select("id")
@@ -129,7 +131,7 @@ export async function createDrink(input: {
 
 export async function updateDrink(
   id: string,
-  input: { name: string; description: string; price_cents: number }
+  input: { name: string; description: string; price_cents: number; imageUrl: string | null }
 ): Promise<void> {
   await requireAdmin();
   const supabase = createAdminSupabaseClient();
@@ -139,9 +141,39 @@ export async function updateDrink(
       name: input.name,
       description: input.description || null,
       price_cents: input.price_cents,
+      image_url: input.imageUrl,
     })
     .eq("id", id);
   if (error) throw new Error(error.message);
+}
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+
+export async function uploadDrinkImage(
+  formData: FormData
+): Promise<{ url: string } | { error: string }> {
+  await requireAdmin();
+  const file = formData.get("file");
+  if (!(file instanceof File)) return { error: "No file provided." };
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    return { error: "Please upload a JPEG, PNG, WebP, or GIF image." };
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return { error: "Image is too large (5MB max)." };
+  }
+
+  const supabase = createAdminSupabaseClient();
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `${crypto.randomUUID()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("drink-images")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (uploadError) return { error: uploadError.message };
+
+  const { data } = supabase.storage.from("drink-images").getPublicUrl(path);
+  return { url: data.publicUrl };
 }
 
 export async function setDrinkActive(id: string, isActive: boolean): Promise<void> {

@@ -29,7 +29,11 @@ export function DrinkRow({
   return (
     <div className={`rounded-3xl bg-white p-4 shadow-sm ${drink.is_active ? "" : "opacity-50"}`}>
       <div className="flex items-start gap-3">
-        <DrinkIllustration name={drink.name} className="aspect-square w-16 shrink-0" />
+        <DrinkIllustration
+          name={drink.name}
+          imageUrl={drink.image_url}
+          className="aspect-square w-16 shrink-0"
+        />
         <div className="flex flex-1 items-start justify-between gap-2">
           <div>
             <p className="font-display text-lg font-bold text-amber-900">{drink.name}</p>

@@ -145,7 +145,24 @@ function GenericCupArt() {
   );
 }
 
-export function DrinkIllustration({ name, className = "" }: { name: string; className?: string }) {
+export function DrinkIllustration({
+  name,
+  imageUrl,
+  className = "",
+}: {
+  name: string;
+  imageUrl?: string | null;
+  className?: string;
+}) {
+  if (imageUrl) {
+    return (
+      <div className={`overflow-hidden rounded-2xl ${className}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded photos of arbitrary origin */}
+        <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+      </div>
+    );
+  }
+
   const key = name.toLowerCase();
   let Art = GenericCupArt;
   let bg = "#f3d9ab";

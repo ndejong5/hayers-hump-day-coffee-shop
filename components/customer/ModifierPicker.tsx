@@ -51,7 +51,11 @@ export function ModifierPicker({
         ← Back
       </button>
 
-      <DrinkIllustration name={drink.name} className="aspect-[3/2] w-full shadow-sm" />
+      <DrinkIllustration
+        name={drink.name}
+        imageUrl={drink.image_url}
+        className="aspect-[3/2] w-full shadow-sm"
+      />
       <h2 className="font-display text-2xl font-bold text-amber-900">{drink.name}</h2>
 
       {eligibleForReward && (

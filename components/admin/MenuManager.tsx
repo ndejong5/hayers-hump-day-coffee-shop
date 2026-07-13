@@ -39,6 +39,7 @@ export function MenuManager({
     name: string;
     description: string;
     price_cents: number;
+    imageUrl: string | null;
     modifierIds: string[];
   }) {
     if (editingDrink === "new") {

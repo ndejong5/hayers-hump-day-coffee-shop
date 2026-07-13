@@ -66,6 +66,7 @@ export async function getPublicSettings(): Promise<PublicSettings> {
 
 interface RawBoardOrderRow extends Order {
   customers: { name: string; room: string | null } | null;
+  drinks: { image_url: string | null } | null;
   order_modifiers: { name_at_order: string; price_cents_at_order: number }[];
 }
 
@@ -74,6 +75,7 @@ export function mapBoardOrderRow(row: RawBoardOrderRow): BoardOrder {
     ...row,
     customer_name: row.customers?.name ?? "Unknown",
     customer_room: row.customers?.room ?? null,
+    drink_image_url: row.drinks?.image_url ?? null,
     modifiers: (row.order_modifiers ?? []).map((m) => ({
       name: m.name_at_order,
       price_cents: m.price_cents_at_order,
@@ -82,7 +84,7 @@ export function mapBoardOrderRow(row: RawBoardOrderRow): BoardOrder {
 }
 
 const BOARD_ORDER_SELECT =
-  "*, customers ( name, room ), order_modifiers ( name_at_order, price_cents_at_order )";
+  "*, customers ( name, room ), drinks ( image_url ), order_modifiers ( name_at_order, price_cents_at_order )";
 
 export async function getBoardOrders(windowId: string): Promise<BoardOrder[]> {
   const supabase = createAdminSupabaseClient();

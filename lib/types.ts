@@ -17,6 +17,7 @@ export interface Drink {
   name: string;
   description: string | null;
   price_cents: number;
+  image_url: string | null;
   is_active: boolean;
   sort_order: number;
   created_at: string;
@@ -96,6 +97,7 @@ export interface BoardOrderModifier {
 export interface BoardOrder extends Order {
   customer_name: string;
   customer_room: string | null;
+  drink_image_url: string | null;
   modifiers: BoardOrderModifier[];
 }
 

@@ -16,6 +16,7 @@ export function OrderCard({
       <div className="flex items-start gap-3 p-4">
         <DrinkIllustration
           name={order.drink_name_at_order}
+          imageUrl={order.drink_image_url}
           className="aspect-square w-24 shrink-0 sm:w-28"
         />
         <div className="min-w-0 flex-1">
