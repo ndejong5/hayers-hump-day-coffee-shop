@@ -8,9 +8,9 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
   const base =
-    "w-full rounded-2xl px-6 py-4 text-lg font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]";
+    "w-full rounded-full px-6 py-4 text-lg font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]";
   const variants: Record<Variant, string> = {
-    primary: "bg-amber-600 text-white hover:bg-amber-700",
+    primary: "bg-orange-500 text-white shadow-md shadow-orange-900/20 hover:bg-orange-600",
     secondary: "bg-amber-100 text-amber-900 hover:bg-amber-200",
     outline: "border-2 border-amber-300 text-amber-900 hover:bg-amber-50",
   };

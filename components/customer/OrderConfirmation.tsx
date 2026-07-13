@@ -2,6 +2,7 @@ import type { Order, PublicSettings } from "@/lib/types";
 import { formatCents } from "@/lib/currency";
 import { buildVenmoLink, buildPaypalLink } from "@/lib/paymentLinks";
 import { Button } from "@/components/ui/Button";
+import { DrinkIllustration } from "./DrinkIllustration";
 
 export function OrderConfirmation({
   order,
@@ -22,9 +23,12 @@ export function OrderConfirmation({
 
   return (
     <div className="flex w-full max-w-sm flex-col items-center gap-4 text-center">
-      <span className="text-5xl">🎉</span>
-      <h2 className="text-2xl font-bold text-amber-900">Order placed!</h2>
-      <div className="w-full rounded-2xl bg-white p-4 text-left shadow-sm">
+      <div className="relative w-40">
+        <DrinkIllustration name={order.drink_name_at_order} className="aspect-square w-40 shadow-md" />
+        <span className="absolute -right-2 -top-2 text-4xl">🎉</span>
+      </div>
+      <h2 className="font-display text-2xl font-bold text-amber-900">Order placed!</h2>
+      <div className="w-full rounded-3xl bg-white p-4 text-left shadow-sm">
         <p className="font-semibold text-amber-900">
           {order.drink_name_at_order}
           {order.is_reward_redemption && <span className="ml-2 text-sm">🎁 Free</span>}
@@ -43,7 +47,7 @@ export function OrderConfirmation({
               href={venmoLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full rounded-2xl border-2 border-amber-300 bg-white px-6 py-3 text-center font-semibold text-amber-900"
+              className="w-full rounded-full border-2 border-amber-300 bg-white px-6 py-3 text-center font-semibold text-amber-900"
             >
               Pay with Venmo
             </a>
@@ -53,7 +57,7 @@ export function OrderConfirmation({
               href={paypalLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full rounded-2xl border-2 border-amber-300 bg-white px-6 py-3 text-center font-semibold text-amber-900"
+              className="w-full rounded-full border-2 border-amber-300 bg-white px-6 py-3 text-center font-semibold text-amber-900"
             >
               Pay with PayPal
             </a>

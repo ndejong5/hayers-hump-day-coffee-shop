@@ -108,7 +108,7 @@ export function OrderFlow({
 
   if (step === "loading") {
     return (
-      <main className="flex min-h-dvh items-center justify-center bg-amber-50">
+      <main className="flex min-h-dvh items-center justify-center bg-background">
         <p className="text-amber-700">Loading...</p>
       </main>
     );
@@ -117,72 +117,83 @@ export function OrderFlow({
   const eligibleForReward = !!customer && customer.punch_count >= settings.reward_punches_required;
 
   return (
-    <main className="flex min-h-dvh flex-col items-center gap-6 bg-amber-50 px-4 py-8">
-      <h1 className="text-2xl font-bold text-amber-900">☕ {settings.shop_name}</h1>
+    <main className="flex min-h-dvh flex-col items-center bg-background">
+      <div className="w-full bg-gradient-to-br from-orange-400 via-orange-500 to-amber-700 px-6 pb-8 pt-10 text-center shadow-md">
+        <p className="font-display text-3xl font-extrabold text-white drop-shadow-sm">
+          ☕ {settings.shop_name}
+        </p>
+        <p className="mt-1 text-sm font-medium text-orange-50">
+          Fresh drinks, delivered every Wednesday
+        </p>
+      </div>
 
-      {step !== "name" && <StatusBanner status={windowStatus} />}
+      <div className="flex w-full flex-col items-center gap-6 px-4 py-6">
+        {step !== "name" && <StatusBanner status={windowStatus} />}
 
-      {orderError && (
-        <div className="w-full max-w-sm rounded-xl bg-red-100 px-4 py-3 text-center text-red-800">
-          {orderError}
-        </div>
-      )}
-
-      {step === "name" && <NameEntryForm onSubmit={handleNameSubmit} />}
-
-      {step === "menu" && customer && (
-        <div className="flex w-full max-w-sm flex-col gap-4">
-          <div className="text-center">
-            <p className="text-amber-800">Hi {customer.name}! What are you in the mood for?</p>
-            <p className="mt-1 text-sm text-amber-600">
-              {eligibleForReward
-                ? "🎉 You have a free drink ready!"
-                : `${customer.punch_count} / ${settings.reward_punches_required} punches toward a free drink`}
-            </p>
+        {orderError && (
+          <div className="w-full max-w-sm rounded-2xl bg-red-100 px-4 py-3 text-center text-red-800">
+            {orderError}
           </div>
-          <DrinkGrid
-            drinks={drinks}
-            disabled={windowStatus.status !== "open"}
-            onSelect={handleSelectDrink}
+        )}
+
+        {step === "name" && <NameEntryForm onSubmit={handleNameSubmit} />}
+
+        {step === "menu" && customer && (
+          <div className="flex w-full max-w-md flex-col items-center gap-4">
+            <div className="text-center">
+              <p className="font-display text-xl font-bold text-amber-900">
+                Hi {customer.name}! 👋
+              </p>
+              <p className="mt-1 text-sm text-amber-600">
+                {eligibleForReward
+                  ? "🎉 You have a free drink ready!"
+                  : `${customer.punch_count} / ${settings.reward_punches_required} punches toward a free drink`}
+              </p>
+            </div>
+            <DrinkGrid
+              drinks={drinks}
+              disabled={windowStatus.status !== "open"}
+              onSelect={handleSelectDrink}
+            />
+          </div>
+        )}
+
+        {step === "modifiers" && selectedDrink && (
+          <ModifierPicker
+            drink={selectedDrink}
+            modifiers={modifiers}
+            eligibleForReward={eligibleForReward}
+            modifiersChargeOnReward={settings.modifiers_charge_on_reward}
+            onBack={() => setStep("menu")}
+            onContinue={handleModifiersContinue}
           />
+        )}
+
+        {step === "payment" && (
+          <PaymentPicker
+            onBack={() => setStep("modifiers")}
+            onSubmit={handlePaymentSubmit}
+            submitting={submitting}
+          />
+        )}
+
+        {step === "confirm" && lastOrder && (
+          <OrderConfirmation
+            order={lastOrder}
+            settings={settings}
+            canOrderAgain={windowStatus.status === "open"}
+            onOrderAgain={handleOrderAgain}
+          />
+        )}
+
+        <div className="mt-auto flex flex-col items-center gap-2 pt-6">
+          <Link href="/me" className="text-sm font-medium text-orange-600 underline">
+            📋 My orders &amp; tab
+          </Link>
+          <Link href="/admin/login" className="text-sm font-medium text-orange-600 underline">
+            👩‍🍳 Barista login
+          </Link>
         </div>
-      )}
-
-      {step === "modifiers" && selectedDrink && (
-        <ModifierPicker
-          drink={selectedDrink}
-          modifiers={modifiers}
-          eligibleForReward={eligibleForReward}
-          modifiersChargeOnReward={settings.modifiers_charge_on_reward}
-          onBack={() => setStep("menu")}
-          onContinue={handleModifiersContinue}
-        />
-      )}
-
-      {step === "payment" && (
-        <PaymentPicker
-          onBack={() => setStep("modifiers")}
-          onSubmit={handlePaymentSubmit}
-          submitting={submitting}
-        />
-      )}
-
-      {step === "confirm" && lastOrder && (
-        <OrderConfirmation
-          order={lastOrder}
-          settings={settings}
-          canOrderAgain={windowStatus.status === "open"}
-          onOrderAgain={handleOrderAgain}
-        />
-      )}
-
-      <div className="mt-auto flex flex-col items-center gap-2 pt-6">
-        <Link href="/me" className="text-sm text-amber-600 underline">
-          📋 My orders &amp; tab
-        </Link>
-        <Link href="/admin/login" className="text-sm text-amber-600 underline">
-          👩‍🍳 Barista login
-        </Link>
       </div>
     </main>
   );

@@ -5,6 +5,7 @@ import type { MenuDrink } from "@/lib/data";
 import type { Modifier } from "@/lib/types";
 import { formatCents } from "@/lib/currency";
 import { Button } from "@/components/ui/Button";
+import { DrinkIllustration } from "./DrinkIllustration";
 
 export function ModifierPicker({
   drink,
@@ -46,16 +47,20 @@ export function ModifierPicker({
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4">
-      <button onClick={onBack} className="self-start text-amber-700">
+      <button onClick={onBack} className="self-start font-medium text-orange-600">
         ← Back
       </button>
-      <h2 className="text-xl font-bold text-amber-900">{drink.name}</h2>
+
+      <DrinkIllustration name={drink.name} className="aspect-[3/2] w-full shadow-sm" />
+      <h2 className="font-display text-2xl font-bold text-amber-900">{drink.name}</h2>
 
       {eligibleForReward && (
         <button
           onClick={() => setRedeem((r) => !r)}
-          className={`rounded-xl border-2 px-4 py-3 text-left font-semibold transition ${
-            redeem ? "border-amber-600 bg-amber-100 text-amber-900" : "border-amber-200 bg-white text-amber-900"
+          className={`rounded-2xl border-2 px-4 py-3 text-left font-semibold transition ${
+            redeem
+              ? "border-orange-500 bg-orange-100 text-orange-900"
+              : "border-amber-200 bg-white text-amber-900"
           }`}
         >
           🎁 {redeem ? "Redeeming your free drink!" : "Redeem your free drink"}
@@ -68,14 +73,14 @@ export function ModifierPicker({
             <button
               key={m.id}
               onClick={() => toggle(m.id)}
-              className={`flex items-center justify-between rounded-xl border-2 px-4 py-3 text-left transition ${
+              className={`flex items-center justify-between rounded-2xl border-2 px-4 py-3 text-left transition ${
                 selected.has(m.id)
-                  ? "border-amber-600 bg-amber-100"
+                  ? "border-orange-500 bg-orange-100"
                   : "border-amber-200 bg-white"
               }`}
             >
               <span className="font-medium text-amber-900">{m.name}</span>
-              <span className="text-amber-600">
+              <span className="text-orange-600">
                 {m.price_cents > 0 ? `+${formatCents(m.price_cents)}` : "free"}
               </span>
             </button>
@@ -83,7 +88,7 @@ export function ModifierPicker({
         </div>
       )}
 
-      <div className="flex items-center justify-between rounded-xl bg-amber-50 px-4 py-3">
+      <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
         <span className="font-medium text-amber-900">Total</span>
         <span className="text-lg font-bold text-amber-900">{formatCents(total)}</span>
       </div>

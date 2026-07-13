@@ -1,11 +1,11 @@
 {
-  "name": "Bower Coffee Shop",
-  "short_name": "Bower Coffee",
+  "name": "Hayner's Hump Day Coffee Shop",
+  "short_name": "Hump Day Coffee",
   "description": "Order coffee from the classroom coffee cart.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fffbeb",
-  "theme_color": "#d97706",
+  "background_color": "#fdf6ec",
+  "theme_color": "#ea7317",
   "orientation": "portrait-primary",
   "icons": [
     {

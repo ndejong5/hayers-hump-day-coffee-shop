@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Baloo_2 } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,14 +12,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const baloo = Baloo_2({
+  variable: "--font-baloo",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+});
+
 export const metadata: Metadata = {
-  title: "Bower Coffee Shop",
+  title: "Hayner's Hump Day Coffee Shop",
   description: "Order coffee from the classroom coffee cart.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Bower Coffee",
+    title: "Hump Day Coffee",
   },
   other: {
     "apple-mobile-web-app-capable": "yes",
@@ -29,7 +35,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#d97706",
+  themeColor: "#ea7317",
 };
 
 export default function RootLayout({
@@ -40,7 +46,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${baloo.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
