@@ -150,10 +150,10 @@ export async function updateDrink(
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
-export async function uploadDrinkImage(
+async function uploadImageToBucket(
+  bucket: string,
   formData: FormData
 ): Promise<{ url: string } | { error: string }> {
-  await requireAdmin();
   const file = formData.get("file");
   if (!(file instanceof File)) return { error: "No file provided." };
   if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
@@ -168,12 +168,36 @@ export async function uploadDrinkImage(
   const path = `${crypto.randomUUID()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
-    .from("drink-images")
+    .from(bucket)
     .upload(path, file, { contentType: file.type, upsert: false });
   if (uploadError) return { error: uploadError.message };
 
-  const { data } = supabase.storage.from("drink-images").getPublicUrl(path);
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return { url: data.publicUrl };
+}
+
+export async function uploadDrinkImage(
+  formData: FormData
+): Promise<{ url: string } | { error: string }> {
+  await requireAdmin();
+  return uploadImageToBucket("drink-images", formData);
+}
+
+export async function uploadCustomerPhoto(
+  formData: FormData
+): Promise<{ url: string } | { error: string }> {
+  await requireAdmin();
+  return uploadImageToBucket("customer-photos", formData);
+}
+
+export async function setCustomerPhoto(customerId: string, photoUrl: string | null): Promise<void> {
+  await requireAdmin();
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase
+    .from("customers")
+    .update({ photo_url: photoUrl })
+    .eq("id", customerId);
+  if (error) throw new Error(error.message);
 }
 
 export async function setDrinkActive(id: string, isActive: boolean): Promise<void> {

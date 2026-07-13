@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { fetchOrderForBoard, markMade, markDelivered } from "@/app/admin/actions";
 import type { BoardOrder } from "@/lib/types";
@@ -133,6 +134,13 @@ export function OrderBoard({
       <div className="rounded-3xl bg-white px-4 py-3 text-center text-lg font-semibold text-amber-800 shadow-sm">
         {orders.length} orders · {madeCount} made · {deliveredCount} delivered
       </div>
+
+      <Link
+        href="/admin/board/labels"
+        className="rounded-full border-2 border-orange-300 bg-white px-4 py-3 text-center text-lg font-bold text-orange-700"
+      >
+        🏷️ Print Labels
+      </Link>
 
       {sorted.length === 0 && (
         <p className="text-center text-amber-700">No orders yet this week.</p>

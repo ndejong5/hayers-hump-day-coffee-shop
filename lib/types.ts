@@ -8,6 +8,7 @@ export interface Customer {
   name: string;
   room: string | null;
   email: string | null;
+  photo_url: string | null;
   punch_count: number;
   created_at: string;
 }
@@ -97,6 +98,7 @@ export interface BoardOrderModifier {
 export interface BoardOrder extends Order {
   customer_name: string;
   customer_room: string | null;
+  customer_photo_url: string | null;
   drink_image_url: string | null;
   modifiers: BoardOrderModifier[];
 }

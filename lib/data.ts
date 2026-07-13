@@ -65,7 +65,7 @@ export async function getPublicSettings(): Promise<PublicSettings> {
 }
 
 interface RawBoardOrderRow extends Order {
-  customers: { name: string; room: string | null } | null;
+  customers: { name: string; room: string | null; photo_url: string | null } | null;
   drinks: { image_url: string | null } | null;
   order_modifiers: { name_at_order: string; price_cents_at_order: number }[];
 }
@@ -75,6 +75,7 @@ export function mapBoardOrderRow(row: RawBoardOrderRow): BoardOrder {
     ...row,
     customer_name: row.customers?.name ?? "Unknown",
     customer_room: row.customers?.room ?? null,
+    customer_photo_url: row.customers?.photo_url ?? null,
     drink_image_url: row.drinks?.image_url ?? null,
     modifiers: (row.order_modifiers ?? []).map((m) => ({
       name: m.name_at_order,
@@ -84,7 +85,7 @@ export function mapBoardOrderRow(row: RawBoardOrderRow): BoardOrder {
 }
 
 const BOARD_ORDER_SELECT =
-  "*, customers ( name, room ), drinks ( image_url ), order_modifiers ( name_at_order, price_cents_at_order )";
+  "*, customers ( name, room, photo_url ), drinks ( image_url ), order_modifiers ( name_at_order, price_cents_at_order )";
 
 export async function getBoardOrders(windowId: string): Promise<BoardOrder[]> {
   const supabase = createAdminSupabaseClient();
@@ -278,6 +279,23 @@ export async function getCustomersWithPunches(): Promise<CustomerPunchRow[]> {
     .from("customers")
     .select("id, name, room, punch_count")
     .order("punch_count", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export interface CustomerPhotoRow {
+  id: string;
+  name: string;
+  room: string | null;
+  photo_url: string | null;
+}
+
+export async function getCustomersForPhotos(): Promise<CustomerPhotoRow[]> {
+  const supabase = createAdminSupabaseClient();
+  const { data, error } = await supabase
+    .from("customers")
+    .select("id, name, room, photo_url")
+    .order("name", { ascending: true });
   if (error) throw new Error(error.message);
   return data ?? [];
 }
