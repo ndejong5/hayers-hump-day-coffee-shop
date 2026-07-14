@@ -15,11 +15,12 @@ export function OrderConfirmation({
   canOrderAgain: boolean;
   onOrderAgain: () => void;
 }) {
+  const grandTotal = order.total_cents + order.tip_cents;
   const note = `${settings.shop_name} - ${order.drink_name_at_order}`;
   const venmoLink =
-    order.total_cents > 0 ? buildVenmoLink(settings.venmo_link ?? "", order.total_cents, note) : "";
+    grandTotal > 0 ? buildVenmoLink(settings.venmo_link ?? "", grandTotal, note) : "";
   const paypalLink =
-    order.total_cents > 0 ? buildPaypalLink(settings.paypal_link ?? "", order.total_cents) : "";
+    grandTotal > 0 ? buildPaypalLink(settings.paypal_link ?? "", grandTotal) : "";
 
   return (
     <div className="flex w-full max-w-sm flex-col items-center gap-4 text-center">
@@ -36,7 +37,21 @@ export function OrderConfirmation({
         <p className="mt-1 text-sm text-amber-700">
           {order.payment_method === "cash" ? "Paying with cash at delivery" : "Added to your tab"}
         </p>
-        <p className="mt-2 text-lg font-bold text-amber-900">{formatCents(order.total_cents)}</p>
+        {order.tip_cents > 0 ? (
+          <>
+            <p className="mt-2 text-sm text-amber-700">
+              {formatCents(order.total_cents)} + {formatCents(order.tip_cents)} tip
+            </p>
+            <p className="text-lg font-bold text-amber-900">{formatCents(grandTotal)}</p>
+          </>
+        ) : (
+          <p className="mt-2 text-lg font-bold text-amber-900">{formatCents(grandTotal)}</p>
+        )}
+        {order.note && (
+          <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            📝 {order.note}
+          </p>
+        )}
       </div>
 
       {(venmoLink || paypalLink) && (

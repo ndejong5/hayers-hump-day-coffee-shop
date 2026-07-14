@@ -441,6 +441,7 @@ export async function sendBillEmail(
       <p>Hi ${detail.customer_name},</p>
       <p>Here's your current statement:</p>
       <table style="width:100%; border-collapse: collapse;">${rows}</table>
+      ${detail.tipsCents > 0 ? `<p>Tips: ${formatCents(detail.tipsCents)}</p>` : ""}
       <p style="font-size:18px; font-weight:bold;">Total due: ${formatCents(detail.balance_cents)}</p>
       ${payLinksHtml ? `<p>${payLinksHtml}</p>` : ""}
       <p style="color:#92400e; font-size:12px;">Thanks for your business!</p>

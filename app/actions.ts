@@ -51,6 +51,8 @@ export async function submitOrder(input: {
   modifierIds: string[];
   paymentMethod: PaymentMethod;
   isRedemption: boolean;
+  note?: string | null;
+  tipCents?: number;
 }): Promise<{ order: Order } | { error: string }> {
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase.rpc("place_order", {
@@ -59,6 +61,8 @@ export async function submitOrder(input: {
     p_modifier_ids: input.modifierIds,
     p_payment_method: input.paymentMethod,
     p_is_redemption: input.isRedemption,
+    p_note: input.note ?? null,
+    p_tip_cents: input.tipCents ?? 0,
   });
   if (error) return { error: error.message };
   const order = data as Order;
@@ -79,6 +83,60 @@ export async function submitOrder(input: {
   }
 
   return { order };
+}
+
+export interface UsualOrder {
+  drinkId: string;
+  drinkName: string;
+  modifierIds: string[];
+  modifierNames: string[];
+  paymentMethod: PaymentMethod;
+  totalCents: number;
+}
+
+export async function getMyUsualOrder(deviceId: string): Promise<UsualOrder | null> {
+  if (!deviceId) return null;
+  const supabase = createAdminSupabaseClient();
+  const { data: customer } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("device_id", deviceId)
+    .maybeSingle();
+  if (!customer) return null;
+
+  const { data: lastOrder, error } = await supabase
+    .from("orders")
+    .select(
+      "drink_id, drink_name_at_order, payment_method, total_cents, order_modifiers ( modifier_id, name_at_order )"
+    )
+    .eq("customer_id", customer.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!lastOrder) return null;
+
+  const modifiers = lastOrder.order_modifiers ?? [];
+  return {
+    drinkId: lastOrder.drink_id,
+    drinkName: lastOrder.drink_name_at_order,
+    modifierIds: modifiers.map((m) => m.modifier_id).filter((id): id is string => !!id),
+    modifierNames: modifiers.map((m) => m.name_at_order),
+    paymentMethod: lastOrder.payment_method,
+    totalCents: lastOrder.total_cents,
+  };
+}
+
+export async function reorderUsual(deviceId: string): Promise<{ order: Order } | { error: string }> {
+  const usual = await getMyUsualOrder(deviceId);
+  if (!usual) return { error: "no_usual" };
+  return submitOrder({
+    deviceId,
+    drinkId: usual.drinkId,
+    modifierIds: usual.modifierIds,
+    paymentMethod: usual.paymentMethod,
+    isRedemption: false,
+  });
 }
 
 export async function refreshWindowStatus(): Promise<WindowStatusRow> {

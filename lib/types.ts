@@ -62,6 +62,8 @@ export interface Order {
   is_reward_redemption: boolean;
   subtotal_cents: number;
   total_cents: number;
+  tip_cents: number;
+  note: string | null;
   made_at: string | null;
   delivered_at: string | null;
   cash_collected: boolean | null;
@@ -142,6 +144,8 @@ export interface MyOrderLine {
   drink_name_at_order: string;
   payment_method: PaymentMethod;
   total_cents: number;
+  tip_cents: number;
+  note: string | null;
   made_at: string | null;
   delivered_at: string | null;
   settled_at: string | null;

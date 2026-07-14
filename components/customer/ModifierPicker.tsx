@@ -22,7 +22,7 @@ export function ModifierPicker({
   eligibleForReward: boolean;
   modifiersChargeOnReward: boolean;
   onBack: () => void;
-  onContinue: (modifierIds: string[], isRedemption: boolean) => void;
+  onContinue: (modifierIds: string[], isRedemption: boolean, totalCents: number) => void;
 }) {
   const applicable = useMemo(
     () => modifiers.filter((m) => drink.modifierIds.includes(m.id)),
@@ -53,7 +53,7 @@ export function ModifierPicker({
       const qty = quantities[m.id] ?? 0;
       for (let i = 0; i < qty; i++) modifierIds.push(m.id);
     }
-    onContinue(modifierIds, redeem);
+    onContinue(modifierIds, redeem, total);
   }
 
   return (

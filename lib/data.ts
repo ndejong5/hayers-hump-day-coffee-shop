@@ -130,7 +130,7 @@ export async function getTabSummaries(): Promise<TabSummary[]> {
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
     .from("orders")
-    .select("customer_id, total_cents, customers ( name, room )")
+    .select("customer_id, total_cents, tip_cents, customers ( name, room )")
     .eq("payment_method", "tab")
     .is("settled_at", null);
   if (error) throw new Error(error.message);
@@ -139,17 +139,19 @@ export async function getTabSummaries(): Promise<TabSummary[]> {
   for (const row of (data ?? []) as unknown as {
     customer_id: string;
     total_cents: number;
+    tip_cents: number;
     customers: { name: string; room: string | null } | null;
   }[]) {
+    const amount = row.total_cents + row.tip_cents;
     const existing = byCustomer.get(row.customer_id);
     if (existing) {
-      existing.balance_cents += row.total_cents;
+      existing.balance_cents += amount;
     } else {
       byCustomer.set(row.customer_id, {
         customer_id: row.customer_id,
         customer_name: row.customers?.name ?? "Unknown",
         customer_room: row.customers?.room ?? null,
-        balance_cents: row.total_cents,
+        balance_cents: amount,
       });
     }
   }
@@ -163,6 +165,7 @@ export interface TabOrderLine {
   drink_name_at_order: string;
   modifiers: OrderLineModifier[];
   total_cents: number;
+  tip_cents: number;
 }
 
 export interface CustomerTabDetail {
@@ -171,6 +174,7 @@ export interface CustomerTabDetail {
   customer_room: string | null;
   customer_email: string | null;
   balance_cents: number;
+  tipsCents: number;
   orders: TabOrderLine[];
 }
 
@@ -187,7 +191,7 @@ export async function getCustomerTabDetail(customerId: string): Promise<Customer
   const { data: orders, error: ordersError } = await supabase
     .from("orders")
     .select(
-      "id, created_at, drink_name_at_order, total_cents, order_modifiers ( name_at_order, price_cents_at_order )"
+      "id, created_at, drink_name_at_order, total_cents, tip_cents, order_modifiers ( name_at_order, price_cents_at_order )"
     )
     .eq("customer_id", customerId)
     .eq("payment_method", "tab")
@@ -204,6 +208,7 @@ export async function getCustomerTabDetail(customerId: string): Promise<Customer
       price_cents: m.price_cents_at_order,
     })),
     total_cents: o.total_cents,
+    tip_cents: o.tip_cents,
   }));
 
   return {
@@ -211,7 +216,8 @@ export async function getCustomerTabDetail(customerId: string): Promise<Customer
     customer_name: customer.name,
     customer_room: customer.room,
     customer_email: customer.email,
-    balance_cents: lines.reduce((sum, l) => sum + l.total_cents, 0),
+    balance_cents: lines.reduce((sum, l) => sum + l.total_cents + l.tip_cents, 0),
+    tipsCents: lines.reduce((sum, l) => sum + l.tip_cents, 0),
     orders: lines,
   };
 }
@@ -238,7 +244,7 @@ export async function getMyOrderHistory(deviceId: string): Promise<{
   const { data: orders, error: ordersError } = await supabase
     .from("orders")
     .select(
-      "id, created_at, drink_name_at_order, payment_method, total_cents, made_at, delivered_at, settled_at, is_reward_redemption, order_modifiers ( name_at_order, price_cents_at_order )"
+      "id, created_at, drink_name_at_order, payment_method, total_cents, tip_cents, note, made_at, delivered_at, settled_at, is_reward_redemption, order_modifiers ( name_at_order, price_cents_at_order )"
     )
     .eq("customer_id", customer.id)
     .order("created_at", { ascending: false });
@@ -250,6 +256,8 @@ export async function getMyOrderHistory(deviceId: string): Promise<{
     drink_name_at_order: o.drink_name_at_order,
     payment_method: o.payment_method,
     total_cents: o.total_cents,
+    tip_cents: o.tip_cents,
+    note: o.note,
     made_at: o.made_at,
     delivered_at: o.delivered_at,
     settled_at: o.settled_at,
@@ -262,7 +270,7 @@ export async function getMyOrderHistory(deviceId: string): Promise<{
 
   const tabBalanceCents = lines
     .filter((o) => o.payment_method === "tab" && !o.settled_at)
-    .reduce((sum, o) => sum + o.total_cents, 0);
+    .reduce((sum, o) => sum + o.total_cents + o.tip_cents, 0);
 
   const settings = await getPublicSettings();
 

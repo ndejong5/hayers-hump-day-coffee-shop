@@ -8,9 +8,13 @@ import {
   registerCustomer,
   submitOrder,
   refreshWindowStatus,
+  getMyUsualOrder,
+  reorderUsual,
+  type UsualOrder,
 } from "@/app/actions";
 import type { Customer, Order, PaymentMethod, PublicSettings, WindowStatusRow, Modifier } from "@/lib/types";
 import type { MenuDrink } from "@/lib/data";
+import { formatCents } from "@/lib/currency";
 import { StatusBanner } from "./StatusBanner";
 import { NameEntryForm } from "./NameEntryForm";
 import { DrinkGrid } from "./DrinkGrid";
@@ -34,9 +38,11 @@ export function OrderFlow({
   const [step, setStep] = useState<Step>("loading");
   const [deviceId, setDeviceId] = useState("");
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [usual, setUsual] = useState<UsualOrder | null>(null);
   const [windowStatus, setWindowStatus] = useState(initialWindowStatus);
   const [selectedDrink, setSelectedDrink] = useState<MenuDrink | null>(null);
   const [selectedModifierIds, setSelectedModifierIds] = useState<string[]>([]);
+  const [selectedSubtotalCents, setSelectedSubtotalCents] = useState(0);
   const [isRedemption, setIsRedemption] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
@@ -48,6 +54,7 @@ export function OrderFlow({
       setDeviceId(id);
       setCustomer(c);
       setStep(c ? "menu" : "name");
+      if (c) getMyUsualOrder(id).then(setUsual);
     });
   }, []);
 
@@ -63,23 +70,14 @@ export function OrderFlow({
     setStep("modifiers");
   }
 
-  function handleModifiersContinue(modifierIds: string[], redeem: boolean) {
+  function handleModifiersContinue(modifierIds: string[], redeem: boolean, totalCents: number) {
     setSelectedModifierIds(modifierIds);
     setIsRedemption(redeem);
+    setSelectedSubtotalCents(totalCents);
     setStep("payment");
   }
 
-  async function handlePaymentSubmit(method: PaymentMethod) {
-    if (!selectedDrink) return;
-    setSubmitting(true);
-    setOrderError(null);
-    const result = await submitOrder({
-      deviceId,
-      drinkId: selectedDrink.id,
-      modifierIds: selectedModifierIds,
-      paymentMethod: method,
-      isRedemption,
-    });
+  async function afterOrderResult(result: { order: Order } | { error: string }) {
     setSubmitting(false);
 
     const fresh = await refreshWindowStatus();
@@ -91,11 +89,38 @@ export function OrderFlow({
       return;
     }
 
-    const freshCustomer = await getCustomerByDeviceId(deviceId);
+    const [freshCustomer, freshUsual] = await Promise.all([
+      getCustomerByDeviceId(deviceId),
+      getMyUsualOrder(deviceId),
+    ]);
     setCustomer(freshCustomer);
+    setUsual(freshUsual);
 
     setLastOrder(result.order);
     setStep("confirm");
+  }
+
+  async function handlePaymentSubmit(method: PaymentMethod, tipCents: number, note: string) {
+    if (!selectedDrink) return;
+    setSubmitting(true);
+    setOrderError(null);
+    const result = await submitOrder({
+      deviceId,
+      drinkId: selectedDrink.id,
+      modifierIds: selectedModifierIds,
+      paymentMethod: method,
+      isRedemption,
+      tipCents,
+      note: note || null,
+    });
+    await afterOrderResult(result);
+  }
+
+  async function handleReorderUsual() {
+    setSubmitting(true);
+    setOrderError(null);
+    const result = await reorderUsual(deviceId);
+    await afterOrderResult(result);
   }
 
   function handleOrderAgain() {
@@ -115,6 +140,7 @@ export function OrderFlow({
   }
 
   const eligibleForReward = !!customer && customer.punch_count >= settings.reward_punches_required;
+  const canOrder = windowStatus.status === "open";
 
   return (
     <main className="flex min-h-dvh flex-col items-center bg-background">
@@ -150,11 +176,23 @@ export function OrderFlow({
                   : `${customer.punch_count} / ${settings.reward_punches_required} punches toward a free drink`}
               </p>
             </div>
-            <DrinkGrid
-              drinks={drinks}
-              disabled={windowStatus.status !== "open"}
-              onSelect={handleSelectDrink}
-            />
+
+            {usual && (
+              <button
+                onClick={handleReorderUsual}
+                disabled={!canOrder || submitting}
+                className="w-full rounded-3xl bg-gradient-to-r from-orange-400 to-amber-600 p-4 text-left text-white shadow-md transition active:scale-[0.98] disabled:opacity-40"
+              >
+                <p className="font-display text-lg font-bold">🔁 Reorder my usual</p>
+                <p className="text-sm text-orange-50">
+                  {usual.drinkName}
+                  {usual.modifierNames.length > 0 && ` (${usual.modifierNames.join(", ")})`} —{" "}
+                  {formatCents(usual.totalCents)}
+                </p>
+              </button>
+            )}
+
+            <DrinkGrid drinks={drinks} disabled={!canOrder} onSelect={handleSelectDrink} />
           </div>
         )}
 
@@ -171,6 +209,7 @@ export function OrderFlow({
 
         {step === "payment" && (
           <PaymentPicker
+            subtotalCents={selectedSubtotalCents}
             onBack={() => setStep("modifiers")}
             onSubmit={handlePaymentSubmit}
             submitting={submitting}

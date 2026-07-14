@@ -53,8 +53,9 @@ export function TabDetail({
         return `${new Date(o.created_at).toLocaleDateString()} — ${o.drink_name_at_order}${modText} — ${formatCents(o.total_cents)}`;
       }),
       "",
-      `Total due: ${formatCents(detail.balance_cents)}`,
     ];
+    if (detail.tipsCents > 0) lines.push(`Tips: ${formatCents(detail.tipsCents)}`);
+    lines.push(`Total due: ${formatCents(detail.balance_cents)}`);
     if (venmoLink) lines.push(`Pay with Venmo: ${venmoLink}`);
     if (paypalLink) lines.push(`Pay with PayPal: ${paypalLink}`);
     return lines.join("\n");
@@ -124,6 +125,14 @@ export function TabDetail({
             <span className="font-semibold text-amber-900">{formatCents(o.total_cents)}</span>
           </div>
         ))}
+        {detail.tipsCents > 0 && (
+          <div className="flex items-center justify-between border-b border-amber-100 bg-amber-50/50 px-4 py-2">
+            <span className="text-sm text-amber-700">💛 Tips</span>
+            <span className="text-sm font-semibold text-amber-800">
+              {formatCents(detail.tipsCents)}
+            </span>
+          </div>
+        )}
         <div className="flex items-center justify-between rounded-b-2xl bg-amber-50 p-4">
           <span className="font-semibold text-amber-900">Total due</span>
           <span className="text-lg font-bold text-amber-900">

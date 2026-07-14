@@ -235,7 +235,7 @@ export function MyHistory() {
                     {o.is_reward_redemption && <span className="ml-2 text-sm">🎁 Free</span>}
                   </p>
                   <span className="font-semibold text-amber-900">
-                    {formatCents(o.total_cents)}
+                    {formatCents(o.total_cents + o.tip_cents)}
                   </span>
                 </div>
                 {o.modifiers.length > 0 && (
@@ -243,6 +243,12 @@ export function MyHistory() {
                     {groupModifierNames(o.modifiers).join(", ")}
                   </p>
                 )}
+                {o.tip_cents > 0 && (
+                  <p className="text-xs text-green-700">
+                    includes {formatCents(o.tip_cents)} tip 💛
+                  </p>
+                )}
+                {o.note && <p className="text-xs text-amber-600">📝 {o.note}</p>}
                 <p className="text-xs text-amber-500">
                   {new Date(o.created_at).toLocaleDateString(undefined, {
                     month: "short",

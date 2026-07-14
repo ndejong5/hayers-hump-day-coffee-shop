@@ -50,9 +50,19 @@ export function OrderCard({
               </span>
             )}
             <span className="text-sm font-bold text-orange-600">
-              {formatCents(order.total_cents)}
+              {formatCents(order.total_cents + order.tip_cents)}
             </span>
+            {order.tip_cents > 0 && (
+              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
+                +{formatCents(order.tip_cents)} tip
+              </span>
+            )}
           </div>
+          {order.note && (
+            <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              📝 {order.note}
+            </p>
+          )}
           <p className="mt-2 text-sm font-semibold text-orange-600">👉 Tap for prep steps</p>
         </div>
       </button>
