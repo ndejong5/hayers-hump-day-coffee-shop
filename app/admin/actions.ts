@@ -496,3 +496,91 @@ export async function removeAdminPushSubscription(endpoint: string): Promise<voi
     .eq("endpoint", endpoint);
   if (error) throw new Error(error.message);
 }
+
+export async function createHallway(name: string): Promise<string> {
+  await requireAdmin();
+  const supabase = createAdminSupabaseClient();
+  const { data: maxRow } = await supabase
+    .from("hallways")
+    .select("sort_order")
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const nextSortOrder = (maxRow?.sort_order ?? 0) + 1;
+
+  const { data, error } = await supabase
+    .from("hallways")
+    .insert({ name, sort_order: nextSortOrder })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return data.id as string;
+}
+
+export async function renameHallway(id: string, name: string): Promise<void> {
+  await requireAdmin();
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase.from("hallways").update({ name }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteHallway(id: string): Promise<void> {
+  await requireAdmin();
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase.from("hallways").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function moveHallway(id: string, direction: "up" | "down"): Promise<void> {
+  await requireAdmin();
+  const supabase = createAdminSupabaseClient();
+  const { data: hallways, error } = await supabase
+    .from("hallways")
+    .select("id, sort_order")
+    .order("sort_order", { ascending: true });
+  if (error) throw new Error(error.message);
+
+  const list = hallways ?? [];
+  const index = list.findIndex((h) => h.id === id);
+  const swapIndex = direction === "up" ? index - 1 : index + 1;
+  if (index === -1 || swapIndex < 0 || swapIndex >= list.length) return;
+
+  const a = list[index];
+  const b = list[swapIndex];
+  await supabase.from("hallways").update({ sort_order: b.sort_order }).eq("id", a.id);
+  await supabase.from("hallways").update({ sort_order: a.sort_order }).eq("id", b.id);
+}
+
+export async function addRangeRule(
+  hallwayId: string,
+  rangeMin: number,
+  rangeMax: number
+): Promise<void> {
+  await requireAdmin();
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase.from("hallway_rules").insert({
+    hallway_id: hallwayId,
+    kind: "range",
+    range_min: rangeMin,
+    range_max: rangeMax,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function addExactRule(hallwayId: string, exactValue: string): Promise<void> {
+  await requireAdmin();
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase.from("hallway_rules").insert({
+    hallway_id: hallwayId,
+    kind: "exact",
+    exact_value: exactValue,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function removeHallwayRule(ruleId: string): Promise<void> {
+  await requireAdmin();
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase.from("hallway_rules").delete().eq("id", ruleId);
+  if (error) throw new Error(error.message);
+}

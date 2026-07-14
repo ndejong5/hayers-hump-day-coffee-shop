@@ -3,6 +3,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type {
   BoardOrder,
   Drink,
+  Hallway,
   Modifier,
   MyOrderLine,
   Order,
@@ -309,4 +310,20 @@ export async function getCustomersForPhotos(): Promise<CustomerPhotoRow[]> {
     .order("name", { ascending: true });
   if (error) throw new Error(error.message);
   return data ?? [];
+}
+
+export async function getHallways(): Promise<Hallway[]> {
+  const supabase = createAdminSupabaseClient();
+  const [{ data: hallways, error: hallwaysError }, { data: rules, error: rulesError }] =
+    await Promise.all([
+      supabase.from("hallways").select("*").order("sort_order", { ascending: true }),
+      supabase.from("hallway_rules").select("*").order("created_at", { ascending: true }),
+    ]);
+  if (hallwaysError) throw new Error(hallwaysError.message);
+  if (rulesError) throw new Error(rulesError.message);
+
+  return (hallways ?? []).map((h) => ({
+    ...h,
+    rules: (rules ?? []).filter((r) => r.hallway_id === h.id),
+  }));
 }

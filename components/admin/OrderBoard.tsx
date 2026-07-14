@@ -138,12 +138,20 @@ export function OrderBoard({
         {orders.length} orders · {madeCount} made · {deliveredCount} delivered
       </div>
 
-      <Link
-        href="/admin/board/labels"
-        className="rounded-full border-2 border-orange-300 bg-white px-4 py-3 text-center text-lg font-bold text-orange-700"
-      >
-        🏷️ Print Labels
-      </Link>
+      <div className="flex gap-2">
+        <Link
+          href="/admin/board/labels"
+          className="flex-1 rounded-full border-2 border-orange-300 bg-white px-4 py-3 text-center text-lg font-bold text-orange-700"
+        >
+          🏷️ Print Labels
+        </Link>
+        <Link
+          href="/admin/board/delivery"
+          className="flex-1 rounded-full border-2 border-orange-300 bg-white px-4 py-3 text-center text-lg font-bold text-orange-700"
+        >
+          🚚 Delivery Run
+        </Link>
+      </div>
 
       {sorted.length === 0 && (
         <p className="text-center text-amber-700">No orders yet this week.</p>

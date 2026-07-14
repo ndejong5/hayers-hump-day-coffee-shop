@@ -116,6 +116,26 @@ export interface BoardOrder extends Order {
   modifiers: BoardOrderModifier[];
 }
 
+export type HallwayRuleKind = "range" | "exact";
+
+export interface HallwayRule {
+  id: string;
+  hallway_id: string;
+  kind: HallwayRuleKind;
+  range_min: number | null;
+  range_max: number | null;
+  exact_value: string | null;
+  created_at: string;
+}
+
+export interface Hallway {
+  id: string;
+  name: string;
+  sort_order: number;
+  created_at: string;
+  rules: HallwayRule[];
+}
+
 export interface MyOrderLine {
   id: string;
   created_at: string;
