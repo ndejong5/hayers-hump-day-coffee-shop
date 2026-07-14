@@ -10,6 +10,7 @@ import type { MyOrderLine } from "@/lib/types";
 import { PunchCard } from "./PunchCard";
 import { CustomerPushToggle } from "./CustomerPushToggle";
 import { DrinkIllustration } from "./DrinkIllustration";
+import { OrderStatusStepper } from "./OrderStatusStepper";
 import { CustomerAvatar } from "@/components/ui/CustomerAvatar";
 import { Button } from "@/components/ui/Button";
 
@@ -222,49 +223,61 @@ export function MyHistory() {
           {orders.length === 0 && (
             <p className="text-center text-amber-700">No orders yet.</p>
           )}
-          {orders.map((o) => (
-            <div key={o.id} className="flex gap-3 rounded-3xl bg-white p-3 shadow-sm">
-              <DrinkIllustration
-                name={o.drink_name_at_order}
-                className="aspect-square w-16 shrink-0"
-              />
-              <div className="flex flex-1 flex-col justify-center">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-semibold text-amber-900">
-                    {o.drink_name_at_order}
-                    {o.is_reward_redemption && <span className="ml-2 text-sm">🎁 Free</span>}
-                  </p>
-                  <span className="font-semibold text-amber-900">
-                    {formatCents(o.total_cents + o.tip_cents)}
-                  </span>
+          {orders.map((o, i) => {
+            const isActiveOrder = i === 0 && !o.delivered_at;
+            return (
+              <div key={o.id} className="flex flex-col gap-3 rounded-3xl bg-white p-3 shadow-sm">
+                <div className="flex gap-3">
+                  <DrinkIllustration
+                    name={o.drink_name_at_order}
+                    className="aspect-square w-16 shrink-0"
+                  />
+                  <div className="flex flex-1 flex-col justify-center">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold text-amber-900">
+                        {o.drink_name_at_order}
+                        {o.is_reward_redemption && <span className="ml-2 text-sm">🎁 Free</span>}
+                      </p>
+                      <span className="font-semibold text-amber-900">
+                        {formatCents(o.total_cents + o.tip_cents)}
+                      </span>
+                    </div>
+                    {o.modifiers.length > 0 && (
+                      <p className="text-sm text-amber-600">
+                        {groupModifierNames(o.modifiers).join(", ")}
+                      </p>
+                    )}
+                    {o.tip_cents > 0 && (
+                      <p className="text-xs text-green-700">
+                        includes {formatCents(o.tip_cents)} tip 💛
+                      </p>
+                    )}
+                    {o.note && <p className="text-xs text-amber-600">📝 {o.note}</p>}
+                    <p className="text-xs text-amber-500">
+                      {new Date(o.created_at).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                      {!isActiveOrder && (
+                        <>
+                          {" · "}
+                          {o.delivered_at
+                            ? "Delivered"
+                            : o.made_at
+                              ? "Made — awaiting delivery"
+                              : "Order placed"}
+                        </>
+                      )}
+                      {o.payment_method === "tab" && (o.settled_at ? " · Settled" : " · On tab")}
+                    </p>
+                  </div>
                 </div>
-                {o.modifiers.length > 0 && (
-                  <p className="text-sm text-amber-600">
-                    {groupModifierNames(o.modifiers).join(", ")}
-                  </p>
+                {isActiveOrder && (
+                  <OrderStatusStepper madeAt={o.made_at} deliveredAt={o.delivered_at} />
                 )}
-                {o.tip_cents > 0 && (
-                  <p className="text-xs text-green-700">
-                    includes {formatCents(o.tip_cents)} tip 💛
-                  </p>
-                )}
-                {o.note && <p className="text-xs text-amber-600">📝 {o.note}</p>}
-                <p className="text-xs text-amber-500">
-                  {new Date(o.created_at).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                  {" · "}
-                  {o.delivered_at
-                    ? "Delivered"
-                    : o.made_at
-                      ? "Made — awaiting delivery"
-                      : "Order placed"}
-                  {o.payment_method === "tab" && (o.settled_at ? " · Settled" : " · On tab")}
-                </p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <Link href="/" className="text-sm font-medium text-orange-600 underline">

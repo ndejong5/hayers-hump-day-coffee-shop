@@ -1,8 +1,13 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import type { Order, PublicSettings } from "@/lib/types";
 import { formatCents } from "@/lib/currency";
 import { buildVenmoLink, buildPaypalLink } from "@/lib/paymentLinks";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { DrinkIllustration } from "./DrinkIllustration";
+import { OrderStatusStepper } from "./OrderStatusStepper";
 
 export function OrderConfirmation({
   order,
@@ -15,6 +20,34 @@ export function OrderConfirmation({
   canOrderAgain: boolean;
   onOrderAgain: () => void;
 }) {
+  const [madeAt, setMadeAt] = useState(order.made_at);
+  const [deliveredAt, setDeliveredAt] = useState(order.delivered_at);
+
+  useEffect(() => {
+    const supabase = createBrowserSupabaseClient();
+    const channel = supabase
+      .channel(`order-status-${order.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "orders",
+          filter: `id=eq.${order.id}`,
+        },
+        (payload) => {
+          const row = payload.new as { made_at: string | null; delivered_at: string | null };
+          setMadeAt(row.made_at);
+          setDeliveredAt(row.delivered_at);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [order.id]);
+
   const grandTotal = order.total_cents + order.tip_cents;
   const note = `${settings.shop_name} - ${order.drink_name_at_order}`;
   const venmoLink =
@@ -29,6 +62,11 @@ export function OrderConfirmation({
         <span className="absolute -right-2 -top-2 text-4xl">🎉</span>
       </div>
       <h2 className="font-display text-2xl font-bold text-amber-900">Order placed!</h2>
+
+      <div className="w-full rounded-3xl bg-white p-4 shadow-sm">
+        <OrderStatusStepper madeAt={madeAt} deliveredAt={deliveredAt} />
+      </div>
+
       <div className="w-full rounded-3xl bg-white p-4 text-left shadow-sm">
         <p className="font-semibold text-amber-900">
           {order.drink_name_at_order}

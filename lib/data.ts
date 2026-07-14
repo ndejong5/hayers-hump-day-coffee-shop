@@ -335,3 +335,51 @@ export async function getHallways(): Promise<Hallway[]> {
     rules: (rules ?? []).filter((r) => r.hallway_id === h.id),
   }));
 }
+
+export interface WeeklyStatsOrder {
+  id: string;
+  drinkName: string;
+  tipCents: number;
+  deliveredAt: string | null;
+}
+
+export interface WeeklyStats {
+  windowId: string;
+  weekStart: string;
+  thisWeekOrders: WeeklyStatsOrder[];
+  weeklyHistory: { weekStart: string; cupsSold: number }[];
+}
+
+export async function getWeeklyStats(): Promise<WeeklyStats> {
+  const windowStatus = await getWindowStatus();
+  const supabase = createAdminSupabaseClient();
+
+  const [{ data: thisWeekOrders, error: ordersError }, { data: allWindows, error: windowsError }] =
+    await Promise.all([
+      supabase
+        .from("orders")
+        .select("id, drink_name_at_order, tip_cents, delivered_at")
+        .eq("order_window_id", windowStatus.id),
+      supabase
+        .from("order_windows")
+        .select("week_start, order_count")
+        .order("week_start", { ascending: true }),
+    ]);
+  if (ordersError) throw new Error(ordersError.message);
+  if (windowsError) throw new Error(windowsError.message);
+
+  return {
+    windowId: windowStatus.id,
+    weekStart: windowStatus.week_start,
+    thisWeekOrders: (thisWeekOrders ?? []).map((o) => ({
+      id: o.id,
+      drinkName: o.drink_name_at_order,
+      tipCents: o.tip_cents,
+      deliveredAt: o.delivered_at,
+    })),
+    weeklyHistory: (allWindows ?? []).map((w) => ({
+      weekStart: w.week_start,
+      cupsSold: w.order_count,
+    })),
+  };
+}

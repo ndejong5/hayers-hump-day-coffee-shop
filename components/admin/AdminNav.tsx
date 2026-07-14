@@ -6,6 +6,7 @@ import { logoutAdmin } from "@/app/admin/actions";
 
 const links = [
   { href: "/admin/board", label: "Board", icon: "☕" },
+  { href: "/admin/stats", label: "Stats", icon: "🎉" },
   { href: "/admin/menu", label: "Menu", icon: "📋" },
   { href: "/admin/window", label: "Window", icon: "🪟" },
   { href: "/admin/tabs", label: "Tabs", icon: "🧾" },

@@ -27,7 +27,9 @@
       "Bash(git remote *)",
       "Bash(git push *)",
       "Bash(git ls-remote *)",
-      "WebFetch(domain:hayers-hump-day-coffee-shop.vercel.app)"
+      "WebFetch(domain:hayers-hump-day-coffee-shop.vercel.app)",
+      "Skill(dataviz)",
+      "Skill(dataviz:*)"
     ]
   }
 }
