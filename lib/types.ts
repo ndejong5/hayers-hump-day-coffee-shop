@@ -19,6 +19,8 @@ export interface Drink {
   description: string | null;
   price_cents: number;
   image_url: string | null;
+  icon: string;
+  prep_steps: string[];
   is_active: boolean;
   sort_order: number;
   created_at: string;
@@ -28,6 +30,9 @@ export interface Modifier {
   id: string;
   name: string;
   price_cents: number;
+  icon: string;
+  image_url: string | null;
+  instruction: string | null;
   is_active: boolean;
   sort_order: number;
   created_at: string;
@@ -90,9 +95,15 @@ export interface WindowStatusRow {
   slots_remaining: number;
 }
 
-export interface BoardOrderModifier {
+export interface OrderLineModifier {
   name: string;
   price_cents: number;
+}
+
+export interface BoardOrderModifier extends OrderLineModifier {
+  icon: string;
+  instruction: string | null;
+  image_url: string | null;
 }
 
 export interface BoardOrder extends Order {
@@ -100,6 +111,8 @@ export interface BoardOrder extends Order {
   customer_room: string | null;
   customer_photo_url: string | null;
   drink_image_url: string | null;
+  drink_icon: string;
+  drink_prep_steps: string[];
   modifiers: BoardOrderModifier[];
 }
 
@@ -113,5 +126,5 @@ export interface MyOrderLine {
   delivered_at: string | null;
   settled_at: string | null;
   is_reward_redemption: boolean;
-  modifiers: BoardOrderModifier[];
+  modifiers: OrderLineModifier[];
 }

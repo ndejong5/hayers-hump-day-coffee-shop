@@ -40,6 +40,8 @@ export function MenuManager({
     description: string;
     price_cents: number;
     imageUrl: string | null;
+    icon: string;
+    prepSteps: string[];
     modifierIds: string[];
   }) {
     if (editingDrink === "new") {
@@ -53,7 +55,13 @@ export function MenuManager({
     refresh();
   }
 
-  async function handleSaveModifier(input: { name: string; price_cents: number }) {
+  async function handleSaveModifier(input: {
+    name: string;
+    price_cents: number;
+    icon: string;
+    imageUrl: string | null;
+    instruction: string | null;
+  }) {
     if (editingModifier === "new") {
       await createModifier(input);
     } else if (editingModifier) {

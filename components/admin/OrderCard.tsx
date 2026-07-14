@@ -1,19 +1,25 @@
 import type { BoardOrder } from "@/lib/types";
 import { formatCents } from "@/lib/currency";
+import { groupModifierNames } from "@/lib/modifiers";
 import { DrinkIllustration } from "@/components/customer/DrinkIllustration";
 
 export function OrderCard({
   order,
+  onOpenRecipe,
   onToggleMade,
   onToggleDelivered,
 }: {
   order: BoardOrder;
+  onOpenRecipe: () => void;
   onToggleMade: () => void;
   onToggleDelivered: () => void;
 }) {
   return (
     <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
-      <div className="flex items-start gap-3 p-4">
+      <button
+        onClick={onOpenRecipe}
+        className="flex w-full items-start gap-3 p-4 text-left active:bg-amber-50"
+      >
         <DrinkIllustration
           name={order.drink_name_at_order}
           imageUrl={order.drink_image_url}
@@ -31,7 +37,7 @@ export function OrderCard({
           <p className="text-lg text-amber-800">{order.drink_name_at_order}</p>
           {order.modifiers.length > 0 && (
             <p className="text-sm text-amber-600">
-              {order.modifiers.map((m) => m.name).join(", ")}
+              {groupModifierNames(order.modifiers).join(", ")}
             </p>
           )}
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -47,8 +53,9 @@ export function OrderCard({
               {formatCents(order.total_cents)}
             </span>
           </div>
+          <p className="mt-2 text-sm font-semibold text-orange-600">👉 Tap for prep steps</p>
         </div>
-      </div>
+      </button>
 
       <div className="flex gap-2 border-t border-amber-100 p-3">
         <button

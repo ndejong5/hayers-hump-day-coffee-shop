@@ -1,4 +1,5 @@
 import type { BoardOrder } from "@/lib/types";
+import { groupModifierNames } from "@/lib/modifiers";
 import { CustomerAvatar } from "@/components/ui/CustomerAvatar";
 import { DrinkIllustration } from "@/components/customer/DrinkIllustration";
 
@@ -34,7 +35,7 @@ export function Label({ order }: { order: BoardOrder }) {
         </div>
         {order.modifiers.length > 0 && (
           <p className="truncate text-sm text-neutral-600">
-            {order.modifiers.map((m) => m.name).join(", ")}
+            {groupModifierNames(order.modifiers).join(", ")}
           </p>
         )}
       </div>

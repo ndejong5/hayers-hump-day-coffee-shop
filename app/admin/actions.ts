@@ -7,6 +7,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { getOrderForBoard, getCustomerTabDetail, getPublicSettings } from "@/lib/data";
 import { buildVenmoLink, buildPaypalLink } from "@/lib/paymentLinks";
 import { formatCents } from "@/lib/currency";
+import { groupModifierNames } from "@/lib/modifiers";
 import { notifyCustomer } from "@/lib/push";
 import { uploadImageToBucket } from "@/lib/imageUpload";
 import type { BoardOrder, ManualWindowState } from "@/lib/types";
@@ -104,6 +105,8 @@ export async function createDrink(input: {
   description: string;
   price_cents: number;
   imageUrl: string | null;
+  icon: string;
+  prepSteps: string[];
 }): Promise<string> {
   await requireAdmin();
   const supabase = createAdminSupabaseClient();
@@ -122,6 +125,8 @@ export async function createDrink(input: {
       description: input.description || null,
       price_cents: input.price_cents,
       image_url: input.imageUrl,
+      icon: input.icon || "☕",
+      prep_steps: input.prepSteps,
       sort_order: nextSortOrder,
     })
     .select("id")
@@ -132,7 +137,14 @@ export async function createDrink(input: {
 
 export async function updateDrink(
   id: string,
-  input: { name: string; description: string; price_cents: number; imageUrl: string | null }
+  input: {
+    name: string;
+    description: string;
+    price_cents: number;
+    imageUrl: string | null;
+    icon: string;
+    prepSteps: string[];
+  }
 ): Promise<void> {
   await requireAdmin();
   const supabase = createAdminSupabaseClient();
@@ -143,12 +155,21 @@ export async function updateDrink(
       description: input.description || null,
       price_cents: input.price_cents,
       image_url: input.imageUrl,
+      icon: input.icon || "☕",
+      prep_steps: input.prepSteps,
     })
     .eq("id", id);
   if (error) throw new Error(error.message);
 }
 
 export async function uploadDrinkImage(
+  formData: FormData
+): Promise<{ url: string } | { error: string }> {
+  await requireAdmin();
+  return uploadImageToBucket("drink-images", formData);
+}
+
+export async function uploadModifierImage(
   formData: FormData
 ): Promise<{ url: string } | { error: string }> {
   await requireAdmin();
@@ -219,6 +240,9 @@ export async function moveDrink(id: string, direction: "up" | "down"): Promise<v
 export async function createModifier(input: {
   name: string;
   price_cents: number;
+  icon: string;
+  imageUrl: string | null;
+  instruction: string | null;
 }): Promise<void> {
   await requireAdmin();
   const supabase = createAdminSupabaseClient();
@@ -233,6 +257,9 @@ export async function createModifier(input: {
   const { error } = await supabase.from("modifiers").insert({
     name: input.name,
     price_cents: input.price_cents,
+    icon: input.icon || "➕",
+    image_url: input.imageUrl,
+    instruction: input.instruction || null,
     sort_order: nextSortOrder,
   });
   if (error) throw new Error(error.message);
@@ -240,13 +267,25 @@ export async function createModifier(input: {
 
 export async function updateModifier(
   id: string,
-  input: { name: string; price_cents: number }
+  input: {
+    name: string;
+    price_cents: number;
+    icon: string;
+    imageUrl: string | null;
+    instruction: string | null;
+  }
 ): Promise<void> {
   await requireAdmin();
   const supabase = createAdminSupabaseClient();
   const { error } = await supabase
     .from("modifiers")
-    .update({ name: input.name, price_cents: input.price_cents })
+    .update({
+      name: input.name,
+      price_cents: input.price_cents,
+      icon: input.icon || "➕",
+      image_url: input.imageUrl,
+      instruction: input.instruction || null,
+    })
     .eq("id", id);
   if (error) throw new Error(error.message);
 }
@@ -383,7 +422,7 @@ export async function sendBillEmail(
   const rows = detail.orders
     .map((o) => {
       const modText =
-        o.modifiers.length > 0 ? ` (${o.modifiers.map((m) => m.name).join(", ")})` : "";
+        o.modifiers.length > 0 ? ` (${groupModifierNames(o.modifiers).join(", ")})` : "";
       const date = new Date(o.created_at).toLocaleDateString();
       return `<tr><td style="padding:4px 8px;border-bottom:1px solid #fde68a;">${date}</td><td style="padding:4px 8px;border-bottom:1px solid #fde68a;">${o.drink_name_at_order}${modText}</td><td style="padding:4px 8px;border-bottom:1px solid #fde68a;text-align:right;">${formatCents(o.total_cents)}</td></tr>`;
     })

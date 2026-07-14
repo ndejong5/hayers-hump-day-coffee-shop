@@ -20,6 +20,8 @@ export function DrinkFormModal({
     description: string;
     price_cents: number;
     imageUrl: string | null;
+    icon: string;
+    prepSteps: string[];
     modifierIds: string[];
   }) => Promise<void>;
   onCancel: () => void;
@@ -27,6 +29,10 @@ export function DrinkFormModal({
   const [name, setName] = useState(drink?.name ?? "");
   const [description, setDescription] = useState(drink?.description ?? "");
   const [price, setPrice] = useState(drink ? (drink.price_cents / 100).toFixed(2) : "");
+  const [icon, setIcon] = useState(drink?.icon ?? "☕");
+  const [prepSteps, setPrepSteps] = useState<string[]>(
+    drink?.prep_steps && drink.prep_steps.length > 0 ? drink.prep_steps : [""]
+  );
   const [modifierIds, setModifierIds] = useState<Set<string>>(new Set(drink?.modifierIds ?? []));
   const [imageUrl, setImageUrl] = useState<string | null>(drink?.image_url ?? null);
   const [imagePreview, setImagePreview] = useState<string | null>(drink?.image_url ?? null);
@@ -56,6 +62,18 @@ export function DrinkFormModal({
     setPendingFile(null);
     setImageUrl(null);
     setImagePreview(null);
+  }
+
+  function updateStep(index: number, value: string) {
+    setPrepSteps((prev) => prev.map((s, i) => (i === index ? value : s)));
+  }
+
+  function addStep() {
+    setPrepSteps((prev) => [...prev, ""]);
+  }
+
+  function removeStep(index: number) {
+    setPrepSteps((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -92,6 +110,8 @@ export function DrinkFormModal({
       description: description.trim(),
       price_cents: cents,
       imageUrl: finalImageUrl,
+      icon: icon.trim() || "☕",
+      prepSteps: prepSteps.map((s) => s.trim()).filter((s) => s.length > 0),
       modifierIds: Array.from(modifierIds),
     });
     setSaving(false);
@@ -157,6 +177,18 @@ export function DrinkFormModal({
         </div>
 
         <div>
+          <label className="mb-1 block text-sm font-medium text-amber-900">
+            Icon (emoji, shown on the student prep card)
+          </label>
+          <input
+            value={icon}
+            onChange={(e) => setIcon(e.target.value)}
+            placeholder="☕"
+            className="w-24 rounded-xl border-2 border-amber-200 px-3 py-2 text-center text-2xl focus:border-amber-500 focus:outline-none"
+          />
+        </div>
+
+        <div>
           <label className="mb-1 block text-sm font-medium text-amber-900">Description</label>
           <input
             value={description}
@@ -176,6 +208,45 @@ export function DrinkFormModal({
           />
         </div>
 
+        <div>
+          <label className="mb-1 block text-sm font-medium text-amber-900">
+            Prep steps (shown one at a time on the student prep card)
+          </label>
+          <div className="flex flex-col gap-2">
+            {prepSteps.map((step, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="w-5 shrink-0 text-sm font-semibold text-amber-500">
+                  {i + 1}.
+                </span>
+                <input
+                  value={step}
+                  onChange={(e) => updateStep(i, e.target.value)}
+                  placeholder="e.g. Fill cup with hot water"
+                  className="w-full rounded-xl border-2 border-amber-200 px-3 py-2 focus:border-amber-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeStep(i)}
+                  className="shrink-0 text-red-700"
+                  aria-label="Remove step"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={addStep}
+            className="mt-2 rounded-full border-2 border-amber-300 px-3 py-1.5 text-sm font-semibold text-amber-900"
+          >
+            + Add step
+          </button>
+          <p className="mt-1 text-xs text-amber-600">
+            No steps? A single default step with the drink&apos;s name is used.
+          </p>
+        </div>
+
         {allModifiers.length > 0 && (
           <div>
             <label className="mb-1 block text-sm font-medium text-amber-900">Modifiers</label>
@@ -187,7 +258,7 @@ export function DrinkFormModal({
                     checked={modifierIds.has(m.id)}
                     onChange={() => toggleModifier(m.id)}
                   />
-                  {m.name}
+                  {m.icon} {m.name}
                 </label>
               ))}
             </div>

@@ -7,6 +7,7 @@ import type { CustomerTabDetail } from "@/lib/data";
 import type { PublicSettings } from "@/lib/types";
 import { formatCents } from "@/lib/currency";
 import { buildVenmoLink, buildPaypalLink } from "@/lib/paymentLinks";
+import { groupModifierNames } from "@/lib/modifiers";
 import { settleTab, sendBillEmail } from "@/app/admin/actions";
 import { Button } from "@/components/ui/Button";
 
@@ -48,7 +49,7 @@ export function TabDetail({
       "",
       ...detail.orders.map((o) => {
         const modText =
-          o.modifiers.length > 0 ? ` (${o.modifiers.map((m) => m.name).join(", ")})` : "";
+          o.modifiers.length > 0 ? ` (${groupModifierNames(o.modifiers).join(", ")})` : "";
         return `${new Date(o.created_at).toLocaleDateString()} — ${o.drink_name_at_order}${modText} — ${formatCents(o.total_cents)}`;
       }),
       "",
@@ -110,7 +111,7 @@ export function TabDetail({
               <p className="font-medium text-amber-900">{o.drink_name_at_order}</p>
               {o.modifiers.length > 0 && (
                 <p className="text-sm text-amber-600">
-                  {o.modifiers.map((m) => m.name).join(", ")}
+                  {groupModifierNames(o.modifiers).join(", ")}
                 </p>
               )}
               <p className="text-xs text-amber-500">

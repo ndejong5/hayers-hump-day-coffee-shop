@@ -8,6 +8,7 @@ import type { BoardOrder } from "@/lib/types";
 import { OrderCard } from "./OrderCard";
 import { CashCollectedModal } from "./CashCollectedModal";
 import { PushNotificationToggle } from "./PushNotificationToggle";
+import { RecipeCard } from "./RecipeCard";
 
 export function OrderBoard({
   initialOrders,
@@ -18,6 +19,7 @@ export function OrderBoard({
 }) {
   const [orders, setOrders] = useState<BoardOrder[]>(initialOrders);
   const [pendingCashOrderId, setPendingCashOrderId] = useState<string | null>(null);
+  const [activeRecipeOrderId, setActiveRecipeOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
@@ -123,6 +125,7 @@ export function OrderBoard({
 
   const madeCount = orders.filter((o) => o.made_at).length;
   const deliveredCount = orders.filter((o) => o.delivered_at).length;
+  const activeRecipeOrder = orders.find((o) => o.id === activeRecipeOrderId) ?? null;
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-4 bg-background px-4 py-6">
@@ -151,6 +154,7 @@ export function OrderBoard({
           <OrderCard
             key={order.id}
             order={order}
+            onOpenRecipe={() => setActiveRecipeOrderId(order.id)}
             onToggleMade={() => handleToggleMade(order)}
             onToggleDelivered={() => handleToggleDelivered(order)}
           />
@@ -162,6 +166,17 @@ export function OrderBoard({
           onConfirm={() => resolveCashCollected(true)}
           onDeny={() => resolveCashCollected(false)}
           onCancel={() => setPendingCashOrderId(null)}
+        />
+      )}
+
+      {activeRecipeOrder && (
+        <RecipeCard
+          order={activeRecipeOrder}
+          onDone={() => {
+            handleToggleMade(activeRecipeOrder);
+            setActiveRecipeOrderId(null);
+          }}
+          onClose={() => setActiveRecipeOrderId(null)}
         />
       )}
     </main>

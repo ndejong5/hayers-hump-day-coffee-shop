@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getOrCreateDeviceId } from "@/lib/device";
 import { getMyOrderHistory, updateCustomerEmail, uploadMyPhoto, setMyPhoto } from "@/app/actions";
 import { formatCents } from "@/lib/currency";
+import { groupModifierNames } from "@/lib/modifiers";
 import type { MyOrderLine } from "@/lib/types";
 import { PunchCard } from "./PunchCard";
 import { CustomerPushToggle } from "./CustomerPushToggle";
@@ -239,7 +240,7 @@ export function MyHistory() {
                 </div>
                 {o.modifiers.length > 0 && (
                   <p className="text-sm text-amber-600">
-                    {o.modifiers.map((m) => m.name).join(", ")}
+                    {groupModifierNames(o.modifiers).join(", ")}
                   </p>
                 )}
                 <p className="text-xs text-amber-500">

@@ -2,11 +2,11 @@ import "server-only";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type {
   BoardOrder,
-  BoardOrderModifier,
   Drink,
   Modifier,
   MyOrderLine,
   Order,
+  OrderLineModifier,
   PublicSettings,
   WindowStatusRow,
 } from "@/lib/types";
@@ -66,8 +66,12 @@ export async function getPublicSettings(): Promise<PublicSettings> {
 
 interface RawBoardOrderRow extends Order {
   customers: { name: string; room: string | null; photo_url: string | null } | null;
-  drinks: { image_url: string | null } | null;
-  order_modifiers: { name_at_order: string; price_cents_at_order: number }[];
+  drinks: { image_url: string | null; icon: string; prep_steps: string[] } | null;
+  order_modifiers: {
+    name_at_order: string;
+    price_cents_at_order: number;
+    modifiers: { icon: string; instruction: string | null; image_url: string | null } | null;
+  }[];
 }
 
 export function mapBoardOrderRow(row: RawBoardOrderRow): BoardOrder {
@@ -77,15 +81,20 @@ export function mapBoardOrderRow(row: RawBoardOrderRow): BoardOrder {
     customer_room: row.customers?.room ?? null,
     customer_photo_url: row.customers?.photo_url ?? null,
     drink_image_url: row.drinks?.image_url ?? null,
+    drink_icon: row.drinks?.icon ?? "☕",
+    drink_prep_steps: row.drinks?.prep_steps ?? [],
     modifiers: (row.order_modifiers ?? []).map((m) => ({
       name: m.name_at_order,
       price_cents: m.price_cents_at_order,
+      icon: m.modifiers?.icon ?? "➕",
+      instruction: m.modifiers?.instruction ?? null,
+      image_url: m.modifiers?.image_url ?? null,
     })),
   };
 }
 
 const BOARD_ORDER_SELECT =
-  "*, customers ( name, room, photo_url ), drinks ( image_url ), order_modifiers ( name_at_order, price_cents_at_order )";
+  "*, customers ( name, room, photo_url ), drinks ( image_url, icon, prep_steps ), order_modifiers ( name_at_order, price_cents_at_order, modifiers ( icon, instruction, image_url ) )";
 
 export async function getBoardOrders(windowId: string): Promise<BoardOrder[]> {
   const supabase = createAdminSupabaseClient();
@@ -151,7 +160,7 @@ export interface TabOrderLine {
   id: string;
   created_at: string;
   drink_name_at_order: string;
-  modifiers: BoardOrderModifier[];
+  modifiers: OrderLineModifier[];
   total_cents: number;
 }
 

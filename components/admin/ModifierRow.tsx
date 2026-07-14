@@ -23,7 +23,10 @@ export function ModifierRow({
       className={`rounded-2xl bg-white p-4 shadow-sm ${modifier.is_active ? "" : "opacity-50"}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="text-lg font-semibold text-amber-900">{modifier.name}</p>
+        <p className="text-lg font-semibold text-amber-900">
+          <span className="mr-1">{modifier.icon}</span>
+          {modifier.name}
+        </p>
         <span className="font-semibold text-amber-900">
           {modifier.price_cents > 0 ? formatCents(modifier.price_cents) : "Free"}
         </span>
